@@ -176,14 +176,14 @@ There is a lot of talk about [WordPress as an application engine](http://ma.tt/2
 
 Finally, a huge shout out to [Jeremy Felt](http://jeremyfelt.com) for discussing some early versions of these ideas with me.
 
-<span class="footnote-footer-number">1</span> Batcache was developed by [Andy Skelton](http://andyskelton.com/ "http://andyskelton.com/") at [Automattic](http://automattic.com/ "http://automattic.com/"). While they use Batcache, it has been customized for their environment.
+<p class="footnote"><span class="footnote-footer-number">1</span> Batcache was developed by [Andy Skelton](http://andyskelton.com/ "http://andyskelton.com/") at [Automattic](http://automattic.com/ "http://automattic.com/"). While they use Batcache, it has been customized for their environment.</p>
 
-<span class="footnote-footer-number">2</span> I got this number by manually counting the lines of code in WordPress prior to `advanced-cache.php` being included.
+<p class="footnote"><span class="footnote-footer-number">2</span> I got this number by manually counting the lines of code in WordPress prior to `advanced-cache.php` being included.</p>
 
-<span class="footnote-footer-number">3</span> Don't take this number as gospel. I took the total number of lines of code in WordPress (202,680) as estimated by [Ohloh](http://www.ohloh.net/p/wordpress "http://www.ohloh.net/p/wordpress") and multiplied it by 58%, the percent of PHP code in WordPress. Yes, this isn't the most accurate methodology in the world, but more precise measures wouldn't likely change my estimates, so I feel pretty good about my statements.
+<p class="footnote"><span class="footnote-footer-number">3</span> Don't take this number as gospel. I took the total number of lines of code in WordPress (202,680) as estimated by [Ohloh](http://www.ohloh.net/p/wordpress "http://www.ohloh.net/p/wordpress") and multiplied it by 58%, the percent of PHP code in WordPress. Yes, this isn't the most accurate methodology in the world, but more precise measures wouldn't likely change my estimates, so I feel pretty good about my statements.</p>
 
-<span class="footnote-footer-number">4</span> Note that the problem of regenerating the related posts listings can largely be mitigated by caching that particular element. The focus of this article is not on this problem; rather, I am trying to make clear that having the user regenerate shared page data is inefficient.
+<p class="footnote"><span class="footnote-footer-number">4</span> Note that the problem of regenerating the related posts listings can largely be mitigated by caching that particular element. The focus of this article is not on this problem; rather, I am trying to make clear that having the user regenerate shared page data is inefficient.</p>
 
-<span class="footnote-footer-number">5</span> Rarst also might be onto the same idea as Dvorkin, but as of the time of this writing, I have no idea what he is doing.
+<p class="footnote"><span class="footnote-footer-number">5</span> Rarst also might be onto the same idea as Dvorkin, but as of the time of this writing, I have no idea what he is doing.</p>
 
-<span class="footnote-footer-number">6</span> As I only learned about this while researching this article, I think that we need to take a close look at how Symfony is implementing its cache. There are some really smart ideas in there and they can be used to significantly change the landscape of WordPress caching.
+<p class="footnote"><span class="footnote-footer-number">6</span> As I only learned about this while researching this article, I think that we need to take a close look at how Symfony is implementing its cache. There are some really smart ideas in there and they can be used to significantly change the landscape of WordPress caching.</p>
