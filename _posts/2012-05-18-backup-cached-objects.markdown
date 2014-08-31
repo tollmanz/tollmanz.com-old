@@ -1,9 +1,8 @@
 ---
-layout: post
-title:  "A Case for \"Backing Up\" Cached Objects"
-date:   2012-05-18 03:42:00
+layout:     post
+title:      "A Case for \"Backing Up\" Cached Objects"
+date:       2012-05-18 03:42:00
 categories: caching
-references: 
 ---
 
 I recently delivered a talk on [caching for WordPress](http://tollmanz.github.com/caching-for-coders/ "Caching for Coders") at WordCamp San Diego 2012. In the talk, I discussed the notion of "failing gracefully"--making sure that your page still renders when your cache fails, which unfortunately happens more often than one would hope. One of the options that I discussed was using a "backup" copy of the cached object to re-prime the cache on a front end request. As I had little time to discuss my thoughts about this during my talk, I will expand on why I think using a backup copy of a cached object can be useful in WordPress projects.
