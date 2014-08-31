@@ -1,0 +1,11 @@
+# Site settings
+title:            tollmanz.com
+baseurl:          ''
+url:              'http://tollmanz.com'
+twitter_username: tollmanz
+github_username:  tollmanz
+
+permalink: /:title/
+
+sass:
+  style: compressed
