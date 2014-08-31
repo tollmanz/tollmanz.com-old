@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Checking Out a Remote Branch with Git"
-date:   2013-05-09 08:22:00
+layout:     post
+title:      "Checking Out a Remote Branch with Git"
+date:       2013-05-09 08:22:00
 categories: git branch remote
 ---
 

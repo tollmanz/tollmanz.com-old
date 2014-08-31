@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "WordCamp Chicago 2013: Enhancing Developer Creativity with Git"
-date:   2013-06-30 08:24:00
+layout:     post
+title:      "WordCamp Chicago 2013: Enhancing Developer Creativity with Git"
+date:       2013-06-30 08:24:00
 categories: git
 ---
 

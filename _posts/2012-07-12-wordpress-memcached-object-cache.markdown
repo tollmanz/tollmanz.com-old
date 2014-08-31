@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "WordPress Object Cache Driven By The PECL Memcache(d) Extension"
-date:   2012-07-12 18:58:00
+layout:     post
+title:      "WordPress Object Cache Driven By The PECL Memcache(d) Extension"
+date:       2012-07-12 18:58:00
 categories: caching
 ---
 

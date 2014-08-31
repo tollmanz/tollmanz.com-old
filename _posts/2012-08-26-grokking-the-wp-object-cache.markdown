@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Grokking the WordPress Object Cache"
-date:   2012-08-26 11:30:00
+layout:     post
+title:      "Grokking the WordPress Object Cache"
+date:       2012-08-26 11:30:00
 categories: caching
 ---
 

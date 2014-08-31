@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Towards a Partial Page Templating System in WordPress"
-date:   2013-04-28 14:33:00
+layout:     post
+title:      "Towards a Partial Page Templating System in WordPress"
+date:       2013-04-28 14:33:00
 categories: caching edge-side-includes
 ---
 

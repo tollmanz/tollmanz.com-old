@@ -1,9 +1,8 @@
 ---
-layout: post
-title:  "Typography.com's CSSOM Blocking Font Loader"
-date:   2014-06-20 01:45:00
+layout:     post
+title:      "Typography.com's CSSOM Blocking Font Loader"
+date:       2014-06-20 01:45:00
 categories: web-performance
-references: 
 ---
 
 For all of the beauty that webfonts have brought to the internet, they have also brought some performance challenges. I recently found some fascinating characteristics of Typography.com's webfont offerings. Typography.com offers fonts from Hoefler &amp; Co., which are highly acclaimed for being of a particularly high quality. Previously unavailable on the web, Typography.com made Hoefler &amp; Co's fonts available in the [middle of 2013](http://www.webdesignerdepot.com/2013/07/new-webfont-options-from-cloud-typography/).

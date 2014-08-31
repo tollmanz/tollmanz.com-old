@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "I Have a Website"
-date:   2012-05-18 03:30:00
+layout:     post
+title:      "I Have a Website"
+date:       2012-05-18 03:30:00
 categories: site
 ---
 

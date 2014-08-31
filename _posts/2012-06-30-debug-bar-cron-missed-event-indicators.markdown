@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Debug Bar Cron 0.1.2: Missed Event Indicators"
-date:   2012-06-30 20:37:00
+layout:     post
+title:      "Debug Bar Cron 0.1.2: Missed Event Indicators"
+date:       2012-06-30 20:37:00
 categories: plugins
 ---
 

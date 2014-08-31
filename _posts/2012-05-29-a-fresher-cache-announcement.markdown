@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Example Usage and Documentation for the \"A Fresher Cache\" Plugin "
-date:   2012-05-29 12:24:00
+layout:     post
+title:      "Example Usage and Documentation for the \"A Fresher Cache\" Plugin "
+date:       2012-05-29 12:24:00
 categories: caching
 ---
 

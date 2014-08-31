@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Cherry Picking a Range of Commits with Git"
-date:   2013-05-11 08:25:00
+layout:     post
+title:      "Cherry Picking a Range of Commits with Git"
+date:       2013-05-11 08:25:00
 categories: git merge cherry-pick
 ---
 

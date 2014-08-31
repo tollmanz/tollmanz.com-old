@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Caching in WordPress: Invalidation Schemes"
-date:   2012-10-13 13:24:00
+layout:     post
+title:      "Caching in WordPress: Invalidation Schemes"
+date:       2012-10-13 13:24:00
 categories: caching
 ---
 

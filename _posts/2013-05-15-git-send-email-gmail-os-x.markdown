@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Sending Email With Git, Gmail, and OS X"
-date:   2013-05-15 23:30:00
+layout:     post
+title:      "Sending Email With Git, Gmail, and OS X"
+date:       2013-05-15 23:30:00
 categories: git send-email os-x gmail
 ---
 

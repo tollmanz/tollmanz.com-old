@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Errata and Clarifications for My WordCamp Seattle 2012 Talk"
-date:   2012-05-21 03:56:00
+layout:     post
+title:      "Errata and Clarifications for My WordCamp Seattle 2012 Talk"
+date:       2012-05-21 03:56:00
 categories: talks errata
 ---
 

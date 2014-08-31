@@ -1,7 +1,7 @@
 ---
-layout: post
-title:  "Core Caching Concepts in WordPress"
-date:   2013-06-08 13:33:00
+layout:     post
+title:      "Core Caching Concepts in WordPress"
+date:       2013-06-08 13:33:00
 categories: caching
 ---
 
