@@ -1,17 +1,17 @@
 {
-	"name": "tollmanz",
-	"version": "1.0.0",
-	"description": "Zack's website",
-	"homepage": "https://www.tollmanz.com",
-	"bugs": "https://github.com/tollmanz/tollmanz.com/issues",
-	"license": "GPLv2",
-	"repository": {
-		"type": "git",
-		"url": "git@github.com:tollmanz/tollmanz.com.git"
-	},
-	"dependencies": {
-		"grunt": "~0.4.1",
-		"grunt-contrib-watch": "~0.5.3",
-		"load-grunt-tasks": "~0.2.0"
-	}
+  "name": "tollmanz",
+  "version": "1.0.0",
+  "description": "Zack's website",
+  "homepage": "https://www.tollmanz.com",
+  "bugs": "https://github.com/tollmanz/tollmanz.com/issues",
+  "license": "GPLv2",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:tollmanz/tollmanz.com.git"
+  },
+  "dependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-watch": "~0.5.3",
+    "load-grunt-tasks": "~0.2.0"
+  }
 }
