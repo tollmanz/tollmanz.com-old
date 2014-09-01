@@ -7,5 +7,10 @@ github_username:  tollmanz
 
 permalink: /:title/
 
+exclude: [
+  'Gruntfile.js',
+  'package.json'
+]
+
 sass:
   style: compressed
