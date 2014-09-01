@@ -4,5 +4,13 @@ module.exports = function( grunt ) {
   require( 'load-grunt-tasks' )( grunt );
 
   // Project configuration.
-  grunt.initConfig({});
+  grunt.initConfig({
+    shell: {
+      deploy: {
+        command: 'git push prod master'
+      }
+    }
+  });
+
+  grunt.registerTask('deploy', ['shell:deploy']);
 };
