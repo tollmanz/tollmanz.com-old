@@ -21,4 +21,4 @@ Finally, I discussed one of my favorite git tools, [`git bisect`](http://webchic
 
 Overall, I introduced a number of tools that help free developers from the concerns of a linear VCS system. Instead of being so concerned about every commit, my talk focused on allowing developer to think more about their work and less about their VCS and repo history, which serves to foster more creativity and freedom in their work.
 
-The slides for the talk [are available for download](http://tollmanz.com/wp-content/uploads/2013/06/WCCHI.pdf).
+The slides for the talk [are available for download](http://tollmanz.com/media/pdf/WCCHI.pdf).

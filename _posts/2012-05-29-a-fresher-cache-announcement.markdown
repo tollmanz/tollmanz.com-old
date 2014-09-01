@@ -69,7 +69,7 @@ These four arguments provide the main functionality of the plugin. The code abov
 
 After adding that code, the "Freshen" menu item receives a new child item that looks like the following image.
 
-![](/images/freshen-movie-ratings-image.png "freshen-movie-ratings-image")
+![](/media/images/freshen-movie-ratings-image.png "freshen-movie-ratings-image")
 
 When clicking the item, the cache is refreshed and my changes are picked up.
 
