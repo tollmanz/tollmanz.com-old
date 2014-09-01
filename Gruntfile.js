@@ -14,9 +14,12 @@ module.exports = function( grunt ) {
       },
       deploy: {
         command: 'git push prod master'
+      },
+      push: {
+        command: 'git push'
       }
     }
   });
 
-  grunt.registerTask('deploy', ['shell:deploy']);
+  grunt.registerTask('deploy', ['shell:deploy', 'shell:push']);
 };
