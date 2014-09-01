@@ -13,7 +13,7 @@ Cherry picking a range of commits is not too difficult, but it does come with a 
 git cherry-pick ebe6942..905e279
 {% endhighlight %}
 
-The oldest commit in the range is the oldest commit and the last commit in the range is the newest commit. The confusion with this form of the cherry pick merge is that the first commit object listed in the range is not included in the commit. The last commit object is included. I find it difficult to keep track of which commit object is included and which is not. 
+The first hash in the range is the oldest commit and the last hash in the range is the newest commit. The confusion with this form of the cherry pick merge is that the first hash listed in the range is not included in the commit. The last hash is included. I find it difficult to keep track of which hash is included and which is not.
 
 As a result, my preferred syntax for including a range of commits in a cherry pick that is inclusive of both range endpoints is:
 
