@@ -1,5 +1,7 @@
 /* jshint node:true */
 module.exports = function( grunt ) {
+  require( 'time-grunt' )( grunt );
+
   // Load all Grunt tasks
   require( 'load-grunt-tasks' )( grunt );
 
