@@ -6,6 +6,12 @@ module.exports = function( grunt ) {
   // Project configuration.
   grunt.initConfig({
     shell: {
+      build: {
+        command: 'jekyll build'
+      },
+      server: {
+        command: 'jekyll serve'
+      },
       deploy: {
         command: 'git push prod master'
       }
