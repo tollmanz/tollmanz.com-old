@@ -1,9 +1,13 @@
 .highlight {
     background: #F8F8F8;
     color: #e4322e;
-    font-family: 'Inconsolata', "Bitstream Vera Sans Mono", monospace;
     line-height: 18px;
     @extend %vertical-rhythm;
+
+    code {
+        font-size: 16px;
+        line-height: 20px;
+    }
 
     .c {
         color: #999988;
