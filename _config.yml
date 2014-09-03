@@ -4,13 +4,11 @@ baseurl:          ''
 url:              'http://tollmanz.com'
 twitter_username: tollmanz
 github_username:  tollmanz
-
-permalink: /:title/
-
-exclude: [
+local:            true
+permalink:        /:title/
+exclude:          [
   'Gruntfile.js',
   'package.json'
 ]
-
 sass:
   style: compressed
