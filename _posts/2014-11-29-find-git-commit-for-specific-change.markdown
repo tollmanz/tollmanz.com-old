@@ -5,7 +5,7 @@ date:       2014-11-29 23:01:00
 categories: git
 ---
 
-Every now and again, you may need to track down a commit in which a specific change was made. While you can try using `git blame` to find the last time that a line was changed, that may not necessarily lead you to a commit in which a initial piece of code was committed. I was presented this challenge tonight when I was asked [why introduced a changeset](https://core.trac.wordpress.org/ticket/29867#comment:4) in WordPress. Seeing as this was a change to CSS, and more specifically to `z-index`, I had no clue why I would do such a thing. 
+Every now and again, you may need to track down a commit in which a specific change was made. While you can try using `git blame` to find the last time that a line was changed, that may not necessarily lead you to a commit in which a initial piece of code was committed. I was presented this challenge tonight when I was asked [why I introduced a changeset](https://core.trac.wordpress.org/ticket/29867#comment:4) in WordPress. Seeing as this was a change to CSS, and more specifically to `z-index`, I had no clue why I would do such a thing.
 
 Turns out, this code that I added as part of a patch to WordPress, was actually written by a different developer. In an attempt to be helpful, I needed to track down which commit added this code. If I could find this commit, I could potentially answer the question of "why was `!important` used to set the `z-index` for this element." Fortunately, this was actually quite easy with Git.
 
