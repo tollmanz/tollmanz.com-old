@@ -77,7 +77,7 @@ This command led to the following in Kaleidoscope:
 
 The command essentially says, "show me the difference between the commit prior to `6e6c2d8` and commit `6e6c2d8` using my `difftool`." This command allowed me to examine the diff in the tool that I am most comfortable with. It showed me the same information as `git show`, but allowed me to use a better UI to view the changes.
 
-I should note that I did look at the other three commits that touched this line of code. Those three commits were all refactors of the code and were responsible for moving large chunks of code around the plugin and thus did not factor into *the reason why* the code was committed.
+I should note that I did look at the other three commits that changed this line of code. Those three commits were all refactors of the code and were responsible for moving large chunks of code around the plugin and thus did not factor into *the reason why* the code was committed.
 
 References:
 
