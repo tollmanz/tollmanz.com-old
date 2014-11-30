@@ -71,7 +71,7 @@ Now, that worked perfectly well in my use case; however, I prefer to use an exte
 git difftool 6e6c2d8~1..6e6c2d8
 {% endhighlight %}
 
-This command revealed the following in Kaleidoscope:
+This command led to the following in Kaleidoscope:
 
 ![](/media/images/kaleidoscope-diff.png "kaleidoscope-diff")
 
