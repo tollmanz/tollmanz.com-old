@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "Implementing Public Key Pinning"
-date:       2015-01-24 15:00:00
+date:       2015-01-25 20:25:00
 categories: security
 ---
 
