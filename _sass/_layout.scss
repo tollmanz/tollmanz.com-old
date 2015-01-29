@@ -109,3 +109,34 @@
     font-weight: 600;
     font-size: 14px;
 }
+
+.table-header {
+    text-align: center;
+}
+
+.table-header + table {
+    text-align: center;
+    margin: 0 auto;
+
+    @include media-query($on-palm) {
+        font-size: 14px;
+    }
+}
+
+.table-header + table th {
+    padding: 0 15px;
+
+    @include media-query($on-palm) {
+        padding: 0 10px;
+    }
+}
+
+.table-header + table td {
+    font-family: 'Ubuntu Mono', monospace;
+}
+
+.table-note {
+    font-size: 14px;
+    margin: 5px 0 30px;
+    text-align: center;
+}
