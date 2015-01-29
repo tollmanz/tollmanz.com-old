@@ -5,13 +5,13 @@ date:       2015-01-26 21:00:00
 categories: security
 ---
 
-How performant are the `wp_kses` family of functions in WordPress? Folk wisdom and common sense suggests that they are slow. It seems that as long as I have been involved in the WordPress community, I have heard that the `wp_kses` functions should not be used when handling output printed to the create, with the primary reason being that it is not performant.
+How performant are the `wp_kses` family of functions in WordPress? Folk wisdom and common sense suggest that they are slow. It seems that as long as I have been involved in the WordPress community, I have heard that the `wp_kses` functions should not be used when handling output printed to the screen, with the primary reason being that they are not performant.
 
 If you are not familiar with `wp_kses`, it is a function used in WordPress to sanitize HTML content. `wp_kses`, which stands for "kses strips evil scripts", is wonderfully summed up by [Otto](http://ottopress.com/page/13/):
 
 > It can read HTML code, no matter how malformed it is, and filter out undesirable bits. The idea is to allow some safe subset of HTML through, so as to prevent various forms of attacks.
 
-Recently, at work, I noticed a number of uses of `wp_kses_post`, a variant of `wp_kses`, in our theme, went through and removed them all, broke a bunch of stuff, reverted it all, and decided that I actually need to better understand the performance characteristics of the functions. Frankly, I was uncomfortable using the function as I had learned that they were bad for performance. I rolled up my sleeves and beyond exploring `wp_kses` performance.
+Recently, at work, I noticed a number of uses of `wp_kses_post`, a wrapper of `wp_kses`, in our theme, declared that we should *never* have this in our code, went through and removed them all, broke a bunch of stuff, reverted it all, and decided that I actually need to better understand the performance characteristics of the functions. Frankly, I was uncomfortable using the function as I had previously understand that it was bad for performance. I needed to get answers, so I rolled up my sleeves and began exploring `wp_kses` performance.
 
 ### `wp_kses` Background
 
@@ -37,7 +37,7 @@ Unsurprisingly, the results of the tests show that the `wp_kses` functions are i
 
 <h4 class="table-header">Long content</h4>
 
-|      | wp_kses | wp_kses_p | esc_html | esc_attr |
+|      | wp_kses_post | wp_kses_p | esc_html | esc_attr |
 | ---- | ------- | --------- | -------- | -------- |
 | 5.3  | 22.863  | 12.201    | 1.638    | 1.640    |
 | 5.4  | 22.651  | 12.236    | 0.725    | 0.728    |
@@ -49,7 +49,7 @@ Unsurprisingly, the results of the tests show that the `wp_kses` functions are i
 
 <h4 class="table-header">Medium content</h4>
 
-|      | wp_kses | wp_kses_p | esc_html | esc_attr |
+|      | wp_kses_post | wp_kses_p | esc_html | esc_attr |
 | ---- | ------- | --------- | -------- | -------- |
 | 5.3  | 0.319   | 0.252     | 0.055    | 0.055    |
 | 5.4  | 0.283   | 0.246     | 0.052    | 0.053    |
@@ -61,7 +61,7 @@ Unsurprisingly, the results of the tests show that the `wp_kses` functions are i
 
 <h4 class="table-header">Short content</h4>
 
-|      | wp_kses | wp_kses_p | esc_html | esc_attr |
+|      | wp_kses_post | wp_kses_p | esc_html | esc_attr |
 | ---- | ------- | --------- | -------- | -------- |
 | 5.3  | 0.133   | 0.097     | 0.049    | 0.050    |
 | 5.4  | 0.130   | 0.095     | 0.046    | 0.047    |
