@@ -33,7 +33,7 @@ The versions of the functions tested where extracted from WordPress. In order to
 
 ### Results
 
-Unsurprisingly, the results of the tests show that the `wp_kses` functions are indeed slower than the comparison functions as seen in the tables below (all times in ms), which displays the mean performance for each function for each content length and environment. Where things get interesting is when we start to look at the size of the differences. Figures 1, 2, and 3 demonstrate the mean function performance for the difference content lengths. One can see that as the tests move from long to short content, the performance times begin to converge between `wp_kses` and the comparison functions. This is a common sense finding in that it's reasonable to think that less content means less work and more performant processes.
+Unsurprisingly, the results of the tests show that the `wp_kses` functions are indeed slower than the comparison functions as seen in the tables below (all times in ms), which displays the mean performance for each function for each content length and environment. Where things get interesting is when we start to look at the size of the differences. Figures 1, 2, and 3 demonstrate the mean function performance for the different content lengths. One can see that as the tests move from long to short content, the performance times begin to converge between `wp_kses` and the comparison functions. This is a common sense finding in that it's reasonable to think that less content means less work and more performant processes.
 
 <h4 class="table-header">Long content</h4>
 
