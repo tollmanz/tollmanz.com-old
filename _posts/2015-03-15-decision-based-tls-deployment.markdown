@@ -11,9 +11,15 @@ A major goal of TLS is to provide endpoint authentication, which is to verify th
 
 In the process of obtaining a certificate, a number of important decisions need to be made.
 
+
+
+
 First, you need to decide where to buy a certificate.
 
 Second, you need to decide what type of certificate to buy, single domain, wildcard, or extra validation.
+
+
+
 
 In the certificate generation process, you will need to create strong public/private key pair for use during the TLS handshake. The public key will then be used to generate a certificate signing request (CSR) that is sent to a Certificate Authority (CA) to generate the certificate. Let's break down these processes.
 
@@ -328,8 +334,11 @@ Certificate Request:
 
 With our CSR in hand, we can pass it along to a CA in exchange for a certificate.
 
+#### Sending the Certificate Signing Request to a Certificate Authority
 
+Fortunately, the last step in this process is relatively easy. The CSR that you painstakingly prepared needs to be sent to your CA of choice. The CSR submission processes for CA's vary greatly. Most will involve sending the CSR through an online form followed by a verification process typically involving an email sent to an address associated with the domain that the certificate is being created for.
 
+At the end of the process you will receive your certificate. Depending on the CA, you may also receive different bundles of certificates. You will want to gather the certificate for your domain along with *all of the CAs intermediates*, but *do not include the root certificate*. The root certificate is available to the browser. If you bundle this certificate to be sent with the other certificates, it is extra bytes on the wire because it is not needed given that the certificate is already available to the browser.
 
 
 
