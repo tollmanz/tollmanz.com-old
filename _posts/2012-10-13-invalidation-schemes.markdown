@@ -5,7 +5,7 @@ date:       2012-10-13 13:24:00
 categories: caching
 ---
 
-WordPress makes [interacting with an object cache](http://tollmanz.com/grokking-the-wp-object-cache/" title="Grokking the WordPress Object Cache) a breeze. With minimal effort, one can set, get, and delete cached objects. The challenge is with how to implement those functions in a reasonable manner to develop a fast and powerful application. One of the more challenging aspects of writing applications is trying to find strategies to invalidate and regenerate cached objects. In this article, I will elucidate a strategy that I have found useful when handling dealing with evicting large amounts of grouped data. I will begin by describing the problem in detail before moving on to explain the solution I tend to implement.
+WordPress makes [interacting with an object cache](http://tollmanz.com/grokking-the-wp-object-cache/ "Grokking the WordPress Object Cache") a breeze. With minimal effort, one can set, get, and delete cached objects. The challenge is with how to implement those functions in a reasonable manner to develop a fast and powerful application. One of the more challenging aspects of writing applications is trying to find strategies to invalidate and regenerate cached objects. In this article, I will elucidate a strategy that I have found useful when handling dealing with evicting large amounts of grouped data. I will begin by describing the problem in detail before moving on to explain the solution I tend to implement.
 
 ### Setting Data to the Cache
 
