@@ -12,3 +12,5 @@ exclude:          [
 ]
 sass:
   style: compressed
+kramdown:
+  smart_quotes: ["apos", "apos", "quot", "quot"]
