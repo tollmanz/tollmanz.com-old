@@ -6,6 +6,10 @@ dl, dd, ol, ul, figure {
 }
 
 body {
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+.base-font-loaded body {
     font-family: $base-font-family;
     font-size: $base-font-size;
     line-height: $base-line-height;
@@ -22,6 +26,16 @@ ul, ol, dl, figure,
 }
 
 h1, h2, h3, h4, h5, h6 {
+    font-family: Georgia, serif;
+    font-weight: 400;
+}
+
+.header-font-loaded h1,
+.header-font-loaded h2,
+.header-font-loaded h3,
+.header-font-loaded h4,
+.header-font-loaded h5,
+.header-font-loaded h6 {
     font-family: $header-font-family;
     font-weight: 400;
 }
@@ -81,7 +95,12 @@ blockquote {
 
 pre,
 code {
-    font-family: 'Ubuntu Mono', monospace;
+    font-family: monospace;
+}
+
+.code-font-loaded pre,
+.code-font-loaded code {
+    font-family: $code-font-family;
 }
 
 code {
