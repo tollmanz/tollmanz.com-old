@@ -1,17 +1,19 @@
 ---
 layout:     post
-title:      "Taking HTTP/2 for a Spin with Nghttpx"
+title:      "Taking HTTP/2 for a Spin with Nghttp2"
 date:       2015-06-17 22:45:00
 categories: http2, performance, nginx
 ---
 
-HTTP/2 is here. Well...kinda. All major browsers currently support HTTP/2 or have publicly announced intentions to support it. Finding server software that supports HTTP/2 is a little trickier though. Nginx and Apache, the two biggest server applications do not currently support HTTP/2. What's a web geek to do? Fortunately, a hot little HTTP/2 server is currently available and ready for use. It has been around for a little over a year and I finally decided to take it for a spin. In fact, my site is offering an HTTP/2 connection via nghttpx right now.
+HTTP/2 is here. Well...kinda. All major browsers either currently support or have publicly announced intentions to support HTTP/2. Finding server software that supports HTTP/2 is a little trickier though. Nginx and Apache, the two biggest server applications do not currently support HTTP/2.
 
-Getting nghttpx up and running was surprisingly easy, especially given that there is little information out there beyond the documentation itself. In this article, I will discuss my experiences with nghttpx and HTTP/2, as well as dive into some instructions for installing and configuring the software.
+What's a web geek to do? Fortunately, a hot, experimental HTTP/2 server is currently available and ready for use. It has been around for a little over a year and I finally decided to take it for a spin. In fact, my site is offering an HTTP/2 connection via Nghttp2 right now.
+
+Getting the suite of Nghttp2 applications up and running was surprisingly easy, especially given that there is little information out there beyond the documentation itself. In this article, I will discuss my experiences with Nghttp2 and HTTP/2, as well as dive into some instructions for installing and configuring the software.
 
 ## What is Nghttpx?
 
-Nghttpx is an HTTP/2 proxy implemented on top of Nghttp2. Nghttp2 is an HTTP/2 implementation in C. When you install the Nghttp2 package, you get a client, server, proxy, and related tools. Nghttpx is the proxy that I will focus on in this article. I decided to go with the proxy over the server implementation because I wanted to recycle the work I've done to configure Nginx for serving my site, rather than having to learn how to configure a new piece of server software.
+Nghttp2 is a suite of HTTP/2 applications implemented in C. When you install the Nghttp2 package, you get a client, server, proxy, and related tools. Nghttpx is an HTTP/2 proxy that I will focus on in this article. I decided to go with the proxy over the server implementation because I wanted to recycle the work I've done to configure Nginx for serving my site, rather than having to learn how to configure a new piece of server software.
 
 I've implemented Nghttpx as a reverse proxy. Requests to my website on port 443 are handled by Nghttpx, which proxies the request to Nginx. Nginx ultimately handles all of the request routing to return the requested files. In turn, it hands the response off to Nghttpx which ultimately prepares the HTTP/2 response for the client.
 
@@ -23,17 +25,13 @@ I have been excited about HTTP/2, but have worried about potential difficulties 
 * SPDY 3.1
 * HTTP 1.1
 
-More modern browsers that already support HTTP/2 (Chrome, Firefox) can connect using HTTP/2, while other browsers and clients (Safari, cURL) can still establish a connection. Deployment is uncomplicated and simple.
+More modern browsers that already support HTTP/2 (Chrome, Firefox) can connect using HTTP/2, while other browsers and clients (Safari, cURL) can still establish a connection with SPDY or HTTP/1.1. Deployment is uncomplicated and simple.
 
 ## A Solid TLS Configuration
 
-One of my hesitations with server software other than Nginx is that I really enjoy all of the TLS configuration options that Nginx offers. It implements the widest array of TLS configuration options that I am aware of. If I used a different server to get HTTP/2, my biggest concern was having to trade an "A+" TLS configuration for the features of HTTP/2 (until Nginx itself supported HTTP/2).
+One of my hesitations with server software other than Nginx is that I really enjoy all of the TLS configuration options that Nginx offers. It implements the widest array of TLS configuration options that I am aware of. If I used a different server to get HTTP/2, my biggest concern was having to trade an "A+" TLS configuration for the features of HTTP/2 (until Nginx itself supported HTTP/2 of course).
 
-To my surprise, Nghttpx's TLS configuration is just as powerful as Nginx's. Moreover, the default Nghttpx TLS configuration will produce an "A" rating on [SSL Labs](https://ssllabs.com). Let me repeat that, without any special configuration, Nghttpx provides a best in class TLS configuration out of the box. In fact, the other TLS configuration required was the path to my private key and public certificate chain.
-
-
-SAY SOMETHING ABOUT NGINX'S DEFAULT?
-
+To my surprise, Nghttpx's TLS configuration is just as powerful as Nginx's. Moreover, the default Nghttpx TLS configuration will produce an "A" rating on [SSL Labs](https://ssllabs.com). Let me repeat that, without any special configuration, *Nghttpx provides a best in class TLS configuration out of the box*. In fact, the other TLS configuration required was the path to my private key and public certificate chain.
 
 To contextualize this, [SSL Pulse's](https://www.trustworthyinternet.org/ssl-pulse/) June 11, 2015 data suggests that only 18.8% of ~146k top rated Alexa sites tested received an "A-" rating or higher from SSL Labs. A site with less that an "A-" is characterized as having "inadequate security" due to at least one major flaw in the TLS configuration. It's noteworthy for a piece of software to ship with such solid out of the box TLS configuration. Efforts like these help make it much more difficult for implementors to naively implement less than ideal TLS configuration.
 
@@ -56,7 +54,7 @@ DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SH
 * Secure connections are the default, even though HTTP/2 does not require TLS
 * No static Diffie-Hellman parameters are generated by default as DHE key exchange is not supported unless you provide your own
 
-Basically, if you implement a secure connection in Nginx today, you need to take care to configure these things specifically. If you don't, you may find yourself susceptible to a TLS-related vulnerability.
+Basically, if you implement a secure connection in Nginx today, you need to take care to configure these things specifically. If you don't, you may find yourself susceptible to a TLS-related vulnerability. Nghttpx gives you this security for free.
 
 Another really welcome surprise was the transparency about OCSP when I fired up the server. After starting the server, I found the following in my logs:
 
@@ -73,15 +71,15 @@ verifying the response signature
 verify OK (used: [u'-VAfile', u'/tmp/tmpxUTr9K/issuer.crt'])
 {% endhighlight %}
 
-The processes behind OCSP can be a bit of a black box at times because of the lack of transparency. I really liked that nghttpx told me that it was making the request, the result of the request and when the next request would occur. Oh, and guess what? You can configure that request interval.
+The processes behind OCSP can be a bit of a black box at times because of the lack of visibility. I really liked that Nghttpx told me that it was making the request, the result of the request, and when the next request would occur. Oh, and guess what? You can configure that request interval.
 
 If it isn't apparent, I was very pleased with the TLS configuration. At best, I thought I'd have to configure it to my liking. At worst, I thought I wouldn't be able to configure it as desired. In the end, I got a perfectly configured server for TLS out of the box.
 
 ## The Joys of HTTP/2
 
-The whole reason for this exercise was to beginning playing with HTTP/2. I have been using SPDY for quite some time and was familiar with that experience, but I wanted to see how HTTP/2 compared. In particular, I was excited to test [server push]() (the server directly pushes a resource to a client without first processing HTML), which was never implemented in SPDY via Nginx.
+The whole reason for this exercise was to begin playing with HTTP/2. I have been using SPDY for quite some time and was familiar with that experience, but I wanted to see how HTTP/2 compared. In particular, I was excited to test [server push](https://www.chromium.org/spdy/link-headers-and-server-hint) (the server directly pushes a resource to a client without first processing HTML), which was never implemented in SPDY via Nginx.
 
-My site was [normally](http://www.webpagetest.org/result/150615_WG_3950356ef73d4ea40eeb7f667623878a/7/details/) Start Render at ~1 second with a Speed Index of ~1100.
+My site was [normally](http://www.webpagetest.org/result/150615_WG_3950356ef73d4ea40eeb7f667623878a/7/details/) producing a Start Render at ~1 second with a Speed Index of ~1100.
 
 ![](/media/images/spdy-baseline.png "Baseline performance with SPDY")
 
@@ -99,7 +97,7 @@ When the client sees this header, it immediately starts downloading `main.css` (
 
 ![](/media/images/http2-with-server-push.png "HTTP/2 with server push")
 
-Looking at that waterfall, the interesting thing is that the CSS doesn't even show up on the waterfall. This had me confused. I wanted to see if there was another way to visualize what was happening. Within the suite of Nghttp2 tools, the `nghttp` HTTP/2 client is included. This application allows you to make HTTP/2 requests and includes a number of helpful features. One such feature is a `stat` flag. I requested my site using this command and flag, when I utilized server push and when I didn't:
+Looking at that waterfall, the interesting thing is that the CSS doesn't even show up on the waterfall. This had me confused. I wanted to see if there was another way to visualize what was happening. Within the suite of Nghttp2 tools, the `nghttp` HTTP/2 client is included. This application allows you to make HTTP/2 requests and includes a number of helpful features. One such feature is a `--stat` flag. I requested my site using this command and flag when I utilized server push and when I didn't:
 
 {% highlight bash %}
 # With server push
@@ -113,7 +111,7 @@ nghttp https://www.tollmanz.com --stat
  13     +7.36ms       +217us   7.14ms  200   9K /
 {% endhighlight %}
 
-These requests are like make `curl` requests against a site, except it's using HTTP/2. What you should notice is that with server push, it automatically pushed the CSS. Without server push, I did not get the CSS. Server push was clearly working!
+These requests are like making `curl` requests against a site, except it's using HTTP/2. What you should notice is that with server push is that it automatically pushed the CSS. Without server push, I did not get the CSS. Server push was clearly working!
 
 Using the `--har` flag, I could save the request to a HAR file and use a HAR viewer to visualize what was happening. Using the Chrome HTTP Archive Viewer extension, I could compare the two experiences:
 
@@ -121,19 +119,21 @@ Using the `--har` flag, I could save the request to a HAR file and use a HAR vie
 
 The server push version is at the top of the image with the no server push version at the bottom. What do you notice? The main.css file begins downloading much quicker in the server push version. You'll see that the HTML needs to download before the main.css file is requested in the no server push version. Again, proof that server push is doing something!
 
-One thing that bugged me about my waterfall is that I was able to open a single TCP connection for most resources, except for the fonts that were hosted with Google Fonts. This bothered me. I wonder what would happen if I moved these fonts to my domain. I used [`webfont-dl`](https://github.com/mmastrac/webfont-dl) with the recommendations from [Mathias Bynens](https://github.com/18F/18f.gsa.gov/pull/672#issuecomment-97682705) to download the fonts to my site. The [results](http://www.webpagetest.org/result/150616_PK_23e6b4918df551f63de97e93e00226ef/7/details/) were very nice:
+One thing that bugged me about my waterfall is that I was able to open a single TCP connection for most resources, except for the fonts that were hosted with Google Fonts. This bothered me. I wondered what would happen if I moved these fonts to my domain. I used [`webfont-dl`](https://github.com/mmastrac/webfont-dl) with the recommendations from [Mathias Bynens](https://github.com/18F/18f.gsa.gov/pull/672#issuecomment-97682705) to download the fonts to my site. The [results](http://www.webpagetest.org/result/150616_PK_23e6b4918df551f63de97e93e00226ef/7/details/) were very nice:
 
 ![](/media/images/http2-with-server-push-and-local-fonts.png "HTTP/2 with server push and local fonts")
 
 Start Render fell another 200ms to ~700ms, with the Speed Index following suit at ~720. Eliminating that Google Fonts connection was huge. Being able to reuse the already established TCP connect pays off in a major way.
 
-This initial exploration was exciting. I am looking forward to figuring out how to properly handling server push. Right now, I'm pushing my CSS no matter whether you have it in cache or not. This is a problem. Server hints apparently help solve this, but are not as performant as server push because there is more round trip involved. I also look forward to experimenting with prioritization. I couldn't find good resources on this yet, but hope to figure it out soon.
+This initial exploration was exciting. I am looking forward to figuring out how to properly handle server push. Right now, I'm pushing my CSS no matter whether you have it in cache or not. This is a problem. Server hints apparently help solve this, but are not as performant as server push because there is still a round trip involved.
 
-Now, that I geek out on this, you should too. Let's take a look at how to get a similar setup for your own site.
+I also look forward to experimenting with prioritization. I couldn't find good resources on this yet, but hope to figure it out soon.
 
-## Installing nghttp2
+Now, that I've geeked out on this, you should too. Let's take a look at how to get a similar setup for your own site.
 
-Nghttp2 was surprisingly easy to install. It requires compiling the software from source, but given that it's a relatively modern application, it mostly just worked. Fortunately, Tim Nash did much of the hard work before me and I used [his guide](https://timnash.co.uk/http2-0-with-nginx-nghttp2/) as a starting point. My installations experiences were similar to his, but I fortunately was using Ubuntu 14.04, which smoothed out some of the pain points that he experienced. In my guide, I'll cover not only installation, but also configuration of nghttpx as a proxy for nginx.
+## Installing Nghttp2
+
+Nghttp2 was surprisingly easy to install. It requires compiling the software from source, but given that it's a relatively modern application, it mostly just worked. Fortunately, Tim Nash did much of the hard work before me and I used [his guide](https://timnash.co.uk/http2-0-with-nginx-nghttp2/) as a starting point. My installation experiences were similar to his, but I fortunately was using Ubuntu 14.04, which smoothed out some of the pain points that he experienced. In my guide, I'll cover not only installation, but also configuration of Nghttpx as a proxy for nginx.
 
 ### The Dependencies
 
@@ -143,22 +143,22 @@ As with most installations, you need to get the dependencies handled first. I be
 sudo apt-get install make binutils autoconf automake autotools-dev libtool pkg-config zlib1g-dev libcunit1-dev libssl-dev libxml2-dev libev-dev libevent-dev libjansson-dev libjemalloc-dev python3.4-dev g++ g++-mingw-w64-i686 git python3-setuptools
 {% endhighlight %}
 
-Along with these dependency, I needed to install `cython`, C extensions for Python. This install process requires Python 3. With Python 2 being the default on Ubuntu 14.04, I needed to install tooling specifically for Python 3 and use that throughout. To get `cython` installed, I need to install `easy_install3`, which is specific to Python 3. That allowed me to use `pip3.4`, the Python 3 version of `pip`, the install `cython`. I spent a lot of time trying to get these simple steps right:
+Along with these dependencies, I needed to install `cython`, C extensions for Python. This install process requires Python 3. With Python 2 being the default on Ubuntu 14.04, I needed to install tooling specifically for Python 3 and use that throughout. To get `cython` installed, I needed to install `easy_install3`, which is specific to Python 3. That allowed me to use `pip3.4`, the Python 3 version of `pip`, to install `cython`. I spent a lot of time trying to get these simple steps right:
 
 {% highlight bash %}
 sudo easy_install3 pip
 sudo pip3.4 install -U cython # Takes a while
 {% endhighlight %}
 
-I then created a directory for compiling sources in the next steps
+I then created a directory for compiling sources in the next steps.
 
 {% highlight bash %}
 mkdir ~/src
 {% endhighlight %}
 
-With the basic dependencies in place, I set out to install a higher level dependency, `spdylay`. This application is another project from Tatsuhiro Tsujikawa and serves as the foundation for nghttp2. Essentially, `spdylay` is to SPDY as `nghttp2` is to HTTP/2.
+With the basic dependencies in place, I set out to install a higher level dependency, Spdylay. This application is another project from Tatsuhiro Tsujikawa and serves as the foundation for Nghttp2. Essentially, Spdylay is to SPDY as Nghttp2 is to HTTP/2.
 
-Installing `spdylay` involved the familiar download, configure, and make process for compiling from source:
+Installing Spdylay involved the familiar download, configure, and make process for compiling from source:
 
 {% highlight bash %}
 git clone https://github.com/tatsuhiro-t/spdylay.git ~/src/spdylay
@@ -178,7 +178,7 @@ sudo updatedb
 locate libspdylay.so.7
 {% endhighlight %}
 
-Then used the resulting information repair the links:
+Then used the resulting information to repair the links:
 
 {% highlight bash %}
 sudo ln -s /usr/local/lib/libspdylay.so.7 /lib/x86_64-linux-gnu/libspdylay.so.7
@@ -188,11 +188,11 @@ sudo ldconfig
 
 Note that the `so` files that you search for and link may be different in your case. You can use the technique shown above to search for the `so` and the handle the resulting symlinking using the paths that you discover.
 
-With `spdylay` installed, I could turn my focus to installing nghttp2.
+With Spdylay installed, I could turn my focus to installing Nghttp2.
 
 ### Nghttp2
 
-Installing nghttp2 was similar to `spdylay`; however, there is one really important gotcha that took me some time to work out. When configuring nghttp2, you must do so with Python 3, not Python 2. If your default `python` command is not showing a Python 3 version, you will need to make sure that you set the `PYTHON` environment variable to the path to your `python3` binary (i.e., found with `which python3`) in order to configure with the right Python version. The installations steps below use the path to my Python3 binary:
+Installing Nghttp2 was similar to Spdylay; however, there is one really important gotcha that took me some time to work out. When configuring Nghttp2, you must do so with Python 3, not Python 2. If your default `python` command is not showing a Python 3 version, you will need to make sure that you set the `PYTHON` environment variable to the path to your `python3` binary (i.e., found with `which python3`) in order to configure with the right Python version. The installations steps below use the path to my Python3 binary:
 
 {% highlight bash %}
 git clone https://github.com/tatsuhiro-t/nghttp2.git ~/src/nghttp2
@@ -205,7 +205,7 @@ make
 sudo make install
 {% endhighlight %}
 
-Similar to the `spdylay` experience, attempting to invoke `nghttp` (e.g., `nghttp --version`) was met with warnings about broken links. To fix this, I used the same technique presented above:
+Similar to the Spdylay experience, attempting to invoke `nghttp` (e.g., `nghttp --version`) was met with warnings about broken links. To fix this, I used the same technique presented above:
 
 {% highlight bash %}
 sudo updatedb
@@ -227,17 +227,17 @@ To make sure I had things installed correctly, I tried to invoke the versions of
 {% highlight bash %}
 nghttp --version
 nghttpx --version
-h2load --version
 nghttpd --version
+h2load --version
 {% endhighlight %}
 
-If you get version numbers and no errors from those commands, things are in great shape and it's time to start configuring things.
+If you get version numbers and no errors from those commands, things are in great shape and it's time to start configuring Nghttpx.
 
-### Setting up nghttpx
+### Setting up Nghttpx
 
-I should note at this point, I was focused on `nghttpx` only as I wanted to implement the proxy, not the server or the client. My experiences below will only address `nghttpx`.
+I should note at this point, I was focused on Nghttpx only as I wanted to implement the proxy, not the server or the client. My experiences below will only address Nghttpx.
 
-The quick way to start running `nghttpx` is to use the command line application with arguments and flags. I initially just things started with:
+The quick way to start running Nghttpx is to use the command line application with arguments and flags. I initially got things started with:
 
 {% highlight bash %}
 nghttpx \
@@ -247,7 +247,7 @@ nghttpx \
   --certificate-file=/path/to/cert.crt
 {% endhighlight %}
 
-This setup a proxy listening to port `443` and proxying to `localhost:8080`, with my certificate and private key for tollmanz.com. Simply running this allowed me to establish an HTTP/2 connection to my site and produce and "A" rating with SSL Labs.
+This initialized a proxy listening to port `443` and proxying to `localhost:8080`, with my certificate and private key for tollmanz.com. Simply running this allowed me to establish an HTTP/2 connection to my site and produced an "A" rating with SSL Labs.
 
 While there is a "daemon" option for the command (i.e., `--daemon`), I wanted to be able to use the `service` command to manage the application. After searching around for ways to create my own init script, I found that one was already created for me when installing the software. All I needed to do was move it into the correct location:
 
@@ -255,15 +255,15 @@ While there is a "daemon" option for the command (i.e., `--daemon`), I wanted to
 sudo ~/src/nghttp/contrib/nghttpx-init /etc/init.d/nghttpx
 {% endhighlight %}
 
-With that taken care of, I could start `nghttpx` with:
+With that taken care of, I could start Nghttpx with:
 
 {% highlight bash %}
 sudo service nghttpx restart
 {% endhighlight %}
 
-Pretty awesome; however, I noticed that this did not start the application as a daemon. To correct this, I had to update the init script. This was accomplished by adding `--daemon` to the `DAEMON_ARGS` variable in the init script. I submitted a patch for this because I think this should be the default.
+Pretty awesome; however, I noticed that this did not start the application as a daemon. To correct this, I had to update the init script. This was accomplished by adding `--daemon` to the `DAEMON_ARGS` variable in the init script (I will likely submit a patch for this because I think this should be the default).
 
-Now that I could control `nghttpx` with `service`, I needed to finish things up by creating a configuration file. With the `service` command, I cannot pass arguments to the application. Instead, the application will read the configuration from the default `/etc/nghttpx/nghttpx.conf` location. I created this file and added my configuration:
+Now that I could control Nghttpx with `service`, I needed to finish things up by creating a configuration file. With the `service` command, I cannot pass arguments to the application. Instead, the application will read the configuration from the default `/etc/nghttpx/nghttpx.conf` location. I created this file and added my configuration:
 
 {% highlight bash %}
 frontend=*,443
@@ -285,17 +285,17 @@ sudo touch /var/log/nghttpx/access.log
 sudo touch /var/log/nghttpx/error.log
 {% endhighlight %}
 
-Most of the configuration is self-explanatory, but I need to highlight a few things. I added `add-x-forwarded-for=yes` in order to receive the clients real IP address in my logs, otherwise, every request is reported as `127.0.0.1`.
+Most of the configuration is self-explanatory, but I need to highlight a few things. I added `add-x-forwarded-for=yes` in order to receive the clients real IP address in my logs; otherwise, every request is reported as `127.0.0.1`.
 
-As I was trying to use my current nginx config, it was import that the `host` data for the HTTP request was preserved. I need the true host value to handle things like redirecting `https://tollmanz.com` to `https://www.tollmanz.com`. This was tricky to get right until I found the `no-host-rewrite=yes` configuration value. With that configuration in place, the true `host` value was passed to my nginx configs and they continued to work as they previously did.
+As I was trying to use my current Nginx config, it was import that the `host` data for the HTTP request was preserved. I needed the true host value to handle things like redirecting `https://tollmanz.com` to `https://www.tollmanz.com`. This was tricky to get right until I found the `no-host-rewrite=yes` configuration value. With that configuration in place, the true `host` value was passed to my Nginx configs and they continued to work as they previously did.
 
-Now that the configuration is in place, I can control `nghttpx` like other applications on my server. `sudo service nghttpx start` to start and `sudo service nghttpx stop` to stop!
+With this configuration in place, I could control Nghttpx like other applications on my server. `sudo service nghttpx start` to start and `sudo service nghttpx stop` to stop!
 
 ### Nginx Behind the Proxy
 
-With `nghttpx` proxying to `nginx`, I needed to make sure `nginx` responded to requests to port `8080` properly. I also used `nginx` to set some headers to improve the TLS setup.
+With Nghttpx proxying to Nginx, I needed to make sure Nginx responded to requests to port `8080` properly. I also used Nginx to set some headers to improve the TLS setup.
 
-My `nginx` configuration was simplified to:
+My Nginx configuration was simplified to:
 
 {% highlight bash %}
 server {
@@ -338,6 +338,10 @@ server {
 }
 {% endhighlight %}
 
-The important parts of this is that I'm listening to requests to `tollmanz.com:8080` and `tollmanz.com:80` to redirect it to `www.tollmanz.com:8080`. This makes sure that all requests will resolve to the secure `www.tollmanz.com`. When I was serving content directly from `nginx`, I was listening to `443` instead of `8080`. I mostly just changed the ports and this worked. I had additionally TLS configuration in there, but that was no longer needed because the TLS termination is handled by `nghttpx`, not `nginx`.
+The important parts of this is that I'm listening to requests to `tollmanz.com:8080` and `tollmanz.com:80` to redirect it to `www.tollmanz.com:8080`. This makes sure that all requests will resolve to the secure `www.tollmanz.com`. When I was serving content directly from Nginx, I was listening to `443` instead of `8080`. I mostly just changed the ports and this worked. I had additional TLS configuration in there, but that was no longer needed because the TLS termination is handled by Nghttpx, not Nginx.
 
-I then set my HSTS, CSP, and HPKP headers. The HSTS header brings my SSL Labs rating to and "A+", while the CSP header blocks resources that do not conform to my resource rules. Finally, the HPKP header locks my site to specific certificates. With this in place, I was able to successfully serve my site using `nghttpx` as a reverse proxy for `nginx` over HTTP/2.
+I then set my HSTS, CSP, and HPKP headers. The HSTS header brings my SSL Labs rating to an "A+", while the CSP header blocks resources that do not conform to my resource rules. Finally, the HPKP header locks my site to specific certificates. With this in place, I was able to successfully serve my site using Nghttpx as a reverse proxy for Nginx over HTTP/2.
+
+## Conclusion
+
+HTTP/2 is going to be awesome. After playing with it for only a few hours, I am excited about the future of the web. Browser vendors are aggressively preparing for this future and with software like Nghttp2, we can already start experimenting with this exciting technology. I am also impressed by Nghttp2 itself. It was easy to install, well documented, and ships with important defaults. I encourage you to start experimenting with HTTP/2 yourself.
