@@ -83,8 +83,11 @@ The whole reason for this exercise was to beginning playing with HTTP/2. I have 
 
 My site was [normally](http://www.webpagetest.org/result/150615_WG_3950356ef73d4ea40eeb7f667623878a/7/details/) Start Render at ~1 second with a Speed Index of ~1100.
 
+![](/media/images/spdy-baseline.png "Baseline performance with SPDY")
 
 [Updating to HTTP/2](http://www.webpagetest.org/result/150615_JZ_b76055e3c3f559106719cbf9f9a5a5fd/5/details/) appeared to move things about 100ms, giving me a Start Render of ~900ms and Speed Index of ~1100.
+
+![](/media/images/http2-baseline.png "Baseline performance with HTTP/2")
 
 After running these baseline synthetic tests, I turned to implementing server push for my main CSS. Server push is implemented via a header. I added the following header to each HTTP/2 response:
 
@@ -93,6 +96,8 @@ add_header    Link '</css/main.css>; rel=preload; as=stylesheet';
 {% endhighlight %}
 
 When the client sees this header, it immediately starts downloading `main.css` (unless the client blocks it). This unfortunately [did not change](http://www.webpagetest.org/result/150615_MR_d338139a9daac7f953d940fa66475c7e/6/details/) the Start Render or Speed Index in any meaningful manner.
+
+![](/media/images/http2-with-server-push.png "HTTP/2 with server push")
 
 Looking at that waterfall, the interesting thing is that the CSS doesn't even show up on the waterfall. This had me confused. I wanted to see if there was another way to visualize what was happening. Within the suite of Nghttp2 tools, the `nghttp` HTTP/2 client is included. This application allows you to make HTTP/2 requests and includes a number of helpful features. One such feature is a `stat` flag. I requested my site using this command and flag, when I utilized server push and when I didn't:
 
@@ -116,7 +121,9 @@ Using the `--har` flag, I could save the request to a HAR file and use a HAR vie
 
 The server push version is at the top of the image with the no server push version at the bottom. What do you notice? The main.css file begins downloading much quicker in the server push version. You'll see that the HTML needs to download before the main.css file is requested in the no server push version. Again, proof that server push is doing something!
 
-One thing that bugged me about my waterfall is that I was able to open a single TCP connection for most resources, except for the fonts that were hosted with Google Fonts. This bothered me. I wonder what would happen if I moved these fonts to my domain. I used [`webfont-dl`](https://github.com/mmastrac/webfont-dl) with the recommendations from [Mathias Bynens](https://github.com/18F/18f.gsa.gov/pull/672#issuecomment-97682705) to download the fonts to my site. The results were very nice:
+One thing that bugged me about my waterfall is that I was able to open a single TCP connection for most resources, except for the fonts that were hosted with Google Fonts. This bothered me. I wonder what would happen if I moved these fonts to my domain. I used [`webfont-dl`](https://github.com/mmastrac/webfont-dl) with the recommendations from [Mathias Bynens](https://github.com/18F/18f.gsa.gov/pull/672#issuecomment-97682705) to download the fonts to my site. The [results](http://www.webpagetest.org/result/150616_PK_23e6b4918df551f63de97e93e00226ef/7/details/) were very nice:
+
+![](/media/images/http2-with-server-push-and-local-fonts.png "HTTP/2 with server push and local fonts")
 
 Start Render fell another 200ms to ~700ms, with the Speed Index following suit at ~720. Eliminating that Google Fonts connection was huge. Being able to reuse the already established TCP connect pays off in a major way.
 
