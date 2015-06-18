@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "Taking HTTP/2 for a Spin with Nghttp2"
+title:      "HTTP/2, Nghttp2, Nginx, and a Sane TLS Configuration"
 date:       2015-06-17 22:45:00
 categories: http2, performance, nginx
 ---
