@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "HTTP/2, Nghttp2, Nginx, and a Sane TLS Configuration"
+title:      "Deploying HTTP/2 and Strong TLS with Nghttp2 and Nginx "
 date:       2015-06-17 22:45:00
 categories: http2, performance, nginx
 ---
