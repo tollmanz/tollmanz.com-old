@@ -25,7 +25,7 @@ This command lists all of the CSP violations that are currently logged on your s
 
 Check out an example of the table:
 
-![](/media/images/wp-mcd-list-example.png "Example of the list command")
+![](/media/images/wp-mcd-list-example.jpg "Example of the list command")
 
 **`wp mcd un|resolve`**
 
@@ -65,7 +65,7 @@ wp mcd remove --all
 
 ### HTTPS Status
 
-One goal for this plugin is to be able to automatically resolve blocked URIs in content. To be able to do so, the plugin must be able to determine if an asset has a secure variant. To this end, I added HTTPS domain checking to this release. When a blocked URI is reported, the plugin will attempt to make a secure connection to the HTTPS version of the URI. If it can do so successfully, this information is logged. You can see the HTTPS status for a report in the "S" column of the `wp mcd list` command (see image above). Having this information makes it easy for a developer to quickly update content. 
+One goal for this plugin is to be able to automatically resolve blocked URIs in content. To be able to do so, the plugin must be able to determine if an asset has a secure variant. To this end, I added HTTPS domain checking to this release. When a blocked URI is reported, the plugin will attempt to make a secure connection to the HTTPS version of the URI. If it can do so successfully, this information is logged. You can see the HTTPS status for a report in the "S" column of the `wp mcd list` command (see image above). Having this information makes it easy for a developer to quickly update content.
 
 ### Specific Content Security Policies
 

@@ -99,9 +99,9 @@ The main message I got from Zach's presentation is that Flash of Invisible Text 
 
 You can see the results of FOIT below in the images he used to illustrate this point:
 
-![](/media/images/mitt-president.png "Mitt Romney is Officially Running for President")
+![](/media/images/mitt-president.jpg "Mitt Romney is Officially Running for President")
 
-![](/media/images/mitt-not-president.png "Mitt Romney is Officially not Running for President")
+![](/media/images/mitt-not-president.jpg "Mitt Romney is Officially not Running for President")
 
 * Slides: [https://speakerdeck.com/zachleat/the-performance-and-usability-of-font-loading](https://speakerdeck.com/zachleat/the-performance-and-usability-of-font-loading)
 * Twitter: [@zachleat](https://twitter.com/zachleat)

@@ -18,29 +18,29 @@ function ohsc_get_ratings( $prime_cache = false ) {
 		'Braveheart',
 		'The King\s Speech'
 	);
-	
+
 	$cache_key = 'ohsc-' . serialize( $movies );
-	
+
 	// Check the cache for the movies
 	$ratings = get_transient( $cache_key );
-	
+
 	if ( false === $ratings || $prime_cache ) {
 		// This function queries the API and gets the 3 movie's data
 		$imdb_movies = ohsc_get_movies( $movies );
-		
+
 		$ratings = array();
-		
+
 		foreach ( $imdb_movies as $movie )
 			$ratings[$movie->Title] = $movie->Rating;
-		
-		// Add the ratings to the cache	
+
+		// Add the ratings to the cache
 		if ( ! empty( $ratings ) )
 			set_transient( $cache_key, $ratings );
 		else
 			set_transient( $cache_key, 'no-data' );
 	}
-	
-	return $ratings;	
+
+	return $ratings;
 }
 {% endhighlight %}
 
@@ -65,11 +65,11 @@ add_action( 'init', 'ohsc_add_get_ratings_refresh' );
 
 This code registers a new item with the A Fresher Cache plugin. You may notice that this looks very similar to the `$wp_admin_bar->add_menu` function. The `afc_add_item` function takes the same arguments as the `add_menu` function, but takes four additional arguments (function, args, capability, no_href), which are discussed below.
 
-These four arguments provide the main functionality of the plugin. The code above adds a new menu item titled "Movie Ratings", that when clicked, executes the function registered with the `function` argument. The plugin handles all of the necessary coding that allows the function to execute when the item is clicked. 
+These four arguments provide the main functionality of the plugin. The code above adds a new menu item titled "Movie Ratings", that when clicked, executes the function registered with the `function` argument. The plugin handles all of the necessary coding that allows the function to execute when the item is clicked.
 
 After adding that code, the "Freshen" menu item receives a new child item that looks like the following image.
 
-![](/media/images/freshen-movie-ratings-image.png "freshen-movie-ratings-image")
+![](/media/images/freshen-movie-ratings-image.jpg "freshen-movie-ratings-image")
 
 When clicking the item, the cache is refreshed and my changes are picked up.
 
