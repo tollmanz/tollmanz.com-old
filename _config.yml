@@ -1,7 +1,7 @@
 # Site settings
 title:            tollmanz.com
 baseurl:          ''
-url:              'http://tollmanz.com'
+url:              'https://www.tollmanz.com'
 twitter_username: tollmanz
 github_username:  tollmanz
 local:            true
@@ -14,3 +14,5 @@ sass:
   style: compressed
 kramdown:
   smart_quotes: ["apos", "apos", "quot", "quot"]
+gems:
+  - jekyll-sitemap
