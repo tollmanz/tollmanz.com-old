@@ -32,3 +32,12 @@
 {% if site.production %}
 <script src="/js/analytics.js" type="text/javascript" async></script>
 {% endif %}
+
+<script src="/js/boomerang.js"></script>
+<script src="/js/rt.js"></script>
+<script src="/js/navtiming.js"></script>
+<script>
+  BOOMR.init({
+    beacon_url: "/beacon"
+  });
+</script>
