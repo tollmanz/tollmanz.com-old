@@ -5,6 +5,10 @@ date:       2015-06-28 23:00:00
 categories: monitoring, performance
 ---
 
+Real User Monitoring (RUM) is an important aspect of performance optimization. RUM allows you to track and analyze how real world users of your web properties *actually* experience your website. RUM is an important part of performance monitoring as you collect the real experiences of your users, as opposed to the contrived data inherit in synthetic monitoring (e.g., [Web Page Test](http://www.webpagetest.org); it's still really important!). If you've ever used Google Analytics, you've engaged in RUM before; however, RUM for web performance is more difficult because there is no service like Google Analytics that makes setting up web performance monitoring so easy. Well...there are a number of easy-to-install, pricey SaaS offerings, but those tend to be out of reach for the web performance enthusiast that wants to get started with RUM.
+
+In this article, I want to introduce you to components of an inexpensive system to setting up RUM for a website. The set up is not for the faint of heart, but it is by far the easiest system I've put together for simple RUM. I will first discuss the components of the system, then dive into instructions for how you can set up such a system.
+
 ## General Setup
 
 For our performance monitoring setup to work, we need four main components. Having each of these components perform an individual task makes the focus of each component very specific; however, it comes at the cost of maintaining separate systems. Fortunately, the method I'll discuss is not terribly frustrating.
@@ -141,3 +145,30 @@ The most popular component to use for data aggregation is [StatsD](https://githu
 Once StatsD or DogstatsD aggregates a metrics, it sends it along to the 4th component that stores the aggregated data.
 
 **Component 4: Metrics Storage Engine**
+
+We've climbed mountains to format the data. Now, its time to store the fruits of our labor. A popular application for storing metrics data is [Graphite](http://graphite.wikidot.com/). Graphite allows you to store data within a scalable architecture and expose the data through a simple graphing interface. The little bit that I've experimented with Graphite has been positive; however, it has been a downright pain to get set up.
+
+As an alternative to installing and managing Graphite, I will be discussing the [Datadog](https://www.datadoghq.com) SaaS in this article. Datadog is a hosted monitoring solution. After installing Datadog's software on your server, it'll start sending basic server information to the SaaS for you to view in highly configurable graphs and dashboards. Its API allows you to store pretty much any information you want. Even better, the service is free if you are ok with storing data for only 24 hours.
+
+In an effort to make this walkthrough more manageable, we'll be using Datadog as the storage engine and monitoring solution. Once the data gets to Datadog, we have nothing left to do, but view the data.
+
+**Bringing it Together**
+
+Before moving on to installation information, let's stop to summarize what we've discussed so far. We have a 4 step process that begins by measuring data and ends with storing it using a SaaS. The data takes the following route:
+
+1. Measured with Boomerang JS on the client and beaconed
+1. Boomcatch consumes the beacon data, prepares and sends it to DogstatsD
+1. DogstatsD aggregates 10 seconds worth of data and passes it along for storage
+1. Datadog stores the data for viewing within their admin panel
+
+Note that any of these 4 components can be exchanged for alternatives and in some cases, skipped completely. What I like about these components are that each one has a distinct purposes and is built without concern for any for other components in the system.
+
+In this article, I am presenting the tools I am using as a simple and dirt cheap way to get started with monitoring. The implementation I will discuss is not built for high traffic, high availability monitoring; rather, it focuses on a reasonably approachable and affordable solution for those without big budgets who want to begin with RUM. Most certainly, this set up can be enhanced to handle a more robust load, but this article will not discuss those details.
+
+## Installing Boomerang
+
+## Installing Boomcatch
+
+## Installing Datadog
+
+## Setting up Dashboards
