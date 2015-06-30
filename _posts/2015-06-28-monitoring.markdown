@@ -226,38 +226,21 @@ vis.st:visible
 
 Clearly things are working! If you are following along, I'd recommend experimenting with additional plugins at this time to see the data that it will produce. All you need to do is add the `script` tag for the plugin that you wish to try and view the resulting data to see if it fits your needs.
 
-If you read the documentation for Boomerang, it will suggest that you use an async loading mechanism for the scripts. In my experience, I completely agree. Just adding this monitoring to my site cost me about 500ms in start render time. Given that my start render was at about 700ms, this was not acceptable. I used their recommended iframe loading technique as a result.
+If you read the documentation for Boomerang, it will suggest that you use an async loading mechanism for the scripts. In my experience, I completely agree. Just adding this monitoring to my site cost me about 500ms in start render time. Given that my start render was at about 700ms, this was not acceptable. I used the recommended async loading technique as a result<span class="footnote-article-number">1</span>.
 
 The documentation will suggest that you use an included `make` command to build a single concatenated and minified script to async load; however, in my experience, this `make` command was badly broken. It seemed to include plugins I did not want, as well as exclude ones I did want. As such, I recommend skipping the `make` command. Instead, manually add boomerang.js, the desired plugins, and the call to `BOOMR.init` in a file. Be sure to minify it after concatenating these files. Name it with a version number to make it easy to purge from caches if you ever update it.
 
-Once you have the single file prepared, add the following code to the footer of your site, being sure to update the path to the concatenated and minified file:
+Once you have the single file prepared, add the following code to the *header* of your site, being sure to update the path to the concatenated and minified file:
 
 {% highlight html %}
-<script>
-(function(){
-  var dom,doc,where,iframe = document.createElement('iframe');
-  iframe.src = "javascript:false";
-  (iframe.frameElement || iframe).style.cssText = "width: 0; height: 0; border: 0";
-  var where = document.getElementsByTagName('script')[0];
-  where.parentNode.insertBefore(iframe, where);
+<script async>
+(function(d, s) {
+   var js = d.createElement(s),
+       sc = d.getElementsByTagName(s)[0];
 
-  try {
-    doc = iframe.contentWindow.document;
-  } catch(e) {
-    dom = document.domain;
-    iframe.src="javascript:var d=document.open();d.domain='"+dom+"';void(0);";
-    doc = iframe.contentWindow.document;
-  }
-  doc.open()._l = function() {
-    var js = this.createElement("script");
-    if(dom) this.domain = dom;
-    js.id = "js-iframe-async";
-    js.src = '/js/boomerang-1.js'; # Update me!!!
-    this.body.appendChild(js);
-  };
-  doc.write('<body onload="document._l();">');
-  doc.close();
-})();
+   js.src="/js/boomerang-2.js";
+   sc.parentNode.insertBefore(js, sc);
+}(document, "script"));
 </script>
 {% endhighlight %}
 
@@ -268,3 +251,6 @@ With this async loading method in place, I was able to see a start render and vi
 ## Installing Datadog
 
 ## Setting up Dashboards
+
+
+<p class="footnote"><span class="footnote-footer-number">1</span> If you read the Boomerang JS documentation, they recommend another async technique involving [loading an iframe](http://www.phpied.com/non-onload-blocking-async-js/). I tried and tried to get this method to work, but to no avail. It would simply not collect all of the metrics that Boomerang was supposed to collect when using the iframe technique.
