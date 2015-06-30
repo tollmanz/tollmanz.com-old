@@ -244,7 +244,7 @@ Once you have the single file prepared, add the following code to the *header* o
 </script>
 {% endhighlight %}
 
-With this async loading method in place, I was able to see a start render and visually complete time closer to that of my "pre-monitoring" scores. The async loading methods helps to avoid the observer effect wherein the process of measuring causes a change to the phenomena you are measuring.
+With this async loading method in place, I was able to see a better start render and visually complete time, although, I still could not get it close to the times I saw prior to setting up the monitoring. This is something I want to improve.
 
 ## Installing Boomcatch
 
@@ -253,4 +253,4 @@ With this async loading method in place, I was able to see a start render and vi
 ## Setting up Dashboards
 
 
-<p class="footnote"><span class="footnote-footer-number">1</span> If you read the Boomerang JS documentation, they recommend another async technique involving [loading an iframe](http://www.phpied.com/non-onload-blocking-async-js/). I tried and tried to get this method to work, but to no avail. It would simply not collect all of the metrics that Boomerang was supposed to collect when using the iframe technique.
+<p class="footnote"><span class="footnote-footer-number">1</span> If you read the Boomerang JS documentation, they recommend another async technique involving <a href="http://www.phpied.com/non-onload-blocking-async-js/">loading an iframe</a>. I tried and tried to get this method to work, but to no avail. It would simply not collect all of the metrics that Boomerang was supposed to collect when using the iframe technique.
