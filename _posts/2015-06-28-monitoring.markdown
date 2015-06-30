@@ -167,6 +167,102 @@ In this article, I am presenting the tools I am using as a simple and dirt cheap
 
 ## Installing Boomerang
 
+Setting up Boomerang is a convoluted process of adding JS to your website. It basically comes down to adding a script to your site, but the documentation will drive you nuts trying to figure out exactly how to put it all together. Hopefully I can help clarify some of the pain points.
+
+For Boomerang to work, you must include the [main Boomerang script](https://github.com/lognormal/boomerang/blob/master/boomerang.js), as well as at least one [plugin](https://github.com/lognormal/boomerang/blob/master/plugins) and configure the Boomerang with at least a the `beacon_url` option. Boomerang has 15 plugins available and you can write additional plugins as you see fit. To get started, you need to pick at least one plugin. I initially chose the [navtiming.js](https://github.com/lognormal/boomerang/blob/master/plugins/navtiming.js) and [rt.js](https://github.com/lognormal/boomerang/blob/master/plugins/rt.js) plugins, which collect metrics from the W3C Navigation Timing API and round trip time, respectively. I also chose to send the beacon requests simply to `/beacon`. I downloaded all of my chosen scripts and added the following to the footer of my site:
+
+{% highlight html %}
+<script src="/js/boomerang.js"></script>
+<script src="/js/rt.js"></script>
+<script src="/js/navtiming.js"></script>
+<script>
+  BOOMR.init({
+    beacon_url: "/beacon"
+  });
+</script>
+{% endhighlight %}
+
+With this minimal setup, I could see that the measurement and beaconing was working by viewing the network tab in Chrome. It showed that a request to `/beacon` with a number of `GET` variables was indeed issued. Without having set up the `/beacon` endpoint, this request 404'ed. Viewing the request, I could see that the following data was sent:
+
+{% highlight bash %}
+rt.start:navigation
+rt.tstart:1435637445043
+rt.bstart:1435637445344
+rt.end:1435637445418
+t_resp:38
+t_page:337
+t_done:375
+t_other:t_domloaded|321
+r:http://127.0.0.1:4000/
+nt_red_cnt:0
+nt_nav_type:0
+nt_nav_st:1435637445043
+nt_red_st:0
+nt_red_end:0
+nt_fet_st:1435637445043
+nt_dns_st:1435637445043
+nt_dns_end:1435637445043
+nt_con_st:1435637445043
+nt_con_end:1435637445043
+nt_req_st:1435637445069
+nt_res_st:1435637445081
+nt_res_end:1435637445084
+nt_domloading:1435637445111
+nt_domint:1435637445364
+nt_domcontloaded_st:1435637445364
+nt_domcontloaded_end:1435637445364
+nt_domcomp:1435637445416
+nt_load_st:1435637445416
+nt_load_end:1435637445417
+nt_unload_st:1435637445096
+nt_unload_end:1435637445096
+nt_spdy:0
+nt_cinf:http/1
+nt_first_paint:0
+u:http://127.0.0.1:4000/monitoring/
+v:0.9
+vis.st:visible
+{% endhighlight %}
+
+Clearly things are working! If you are following along, I'd recommend experimenting with additional plugins at this time to see the data that it will produce. All you need to do is add the `script` tag for the plugin that you wish to try and view the resulting data to see if it fits your needs.
+
+If you read the documentation for Boomerang, it will suggest that you use an async loading mechanism for the scripts. In my experience, I completely agree. Just adding this monitoring to my site cost me about 500ms in start render time. Given that my start render was at about 700ms, this was not acceptable. I used their recommended iframe loading technique as a result.
+
+The documentation will suggest that you use an included `make` command to build a single concatenated and minified script to async load; however, in my experience, this `make` command was badly broken. It seemed to include plugins I did not want, as well as exclude ones I did want. As such, I recommend skipping the `make` command. Instead, manually add boomerang.js, the desired plugins, and the call to `BOOMR.init` in a file. Be sure to minify it after concatenating these files. Name it with a version number to make it easy to purge from caches if you ever update it.
+
+Once you have the single file prepared, add the following code to the footer of your site, being sure to update the path to the concatenated and minified file:
+
+{% highlight html %}
+<script>
+(function(){
+  var dom,doc,where,iframe = document.createElement('iframe');
+  iframe.src = "javascript:false";
+  (iframe.frameElement || iframe).style.cssText = "width: 0; height: 0; border: 0";
+  var where = document.getElementsByTagName('script')[0];
+  where.parentNode.insertBefore(iframe, where);
+
+  try {
+    doc = iframe.contentWindow.document;
+  } catch(e) {
+    dom = document.domain;
+    iframe.src="javascript:var d=document.open();d.domain='"+dom+"';void(0);";
+    doc = iframe.contentWindow.document;
+  }
+  doc.open()._l = function() {
+    var js = this.createElement("script");
+    if(dom) this.domain = dom;
+    js.id = "js-iframe-async";
+    js.src = '/js/boomerang-1.js'; # Update me!!!
+    this.body.appendChild(js);
+  };
+  doc.write('<body onload="document._l();">');
+  doc.close();
+})();
+</script>
+{% endhighlight %}
+
+With this async loading method in place, I was able to see a start render and visually complete time closer to that of my "pre-monitoring" scores. The async loading methods helps to avoid the observer effect wherein the process of measuring causes a change to the phenomena you are measuring.
+
 ## Installing Boomcatch
 
 ## Installing Datadog
