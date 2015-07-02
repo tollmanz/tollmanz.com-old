@@ -85,9 +85,9 @@ That request can be caught and handled with the second component in the system.
 
 **Component 2: Middleware to Format and Route Beacon Data**
 
-After Boomerang sends a beacon request, it must be handled by a server side component. At this point, we need to implement a middleware that takes the raw data collected by the client and converts it into a data that can be processed for storage. In this case, we want it to follow a common time-series data format that many storage engines are optimized to handle. The middleware needs to convert this data and pass it along for processing.
+After Boomerang sends a beacon request, it must be handled by a server side component. At this point, we need to implement a middleware that takes the raw data collected by the client and converts it into a data format that can be processed for storage. In this case, we want it to follow a common time-series data format that many storage engines are optimized to handle. The middleware needs to convert this data and pass it along for processing.
 
-For this middleware, I use [Boomcatch](https://github.com/nature/boomcatch), which is a middleware that was built specifically for use with Boomerang. Boomerang is a [Node based server](http://cruft.io/posts/introducing-boomcatch/) that handles the Boomerang formatted data. You could write your own middleware, but the beauty of Boomcatch is that it will process all of the core Boomerang plugin data out of the box.
+For this middleware, I use [Boomcatch](https://github.com/nature/boomcatch), which is a server application that was built specifically for use with Boomerang. Boomcatch is a [Node based server](http://cruft.io/posts/introducing-boomcatch/) that handles the Boomerang formatted data (get it? Boomcatch *catches* Boomerang). You could write your own middleware, but the beauty of Boomcatch is that it will process all of the core Boomerang plugin data out of the box.
 
 As an example of how Boomcatch handles data, the following reformatted log shows how a request is manipulated into more manageable data and it is passed to our 3rd component:
 
@@ -152,7 +152,7 @@ Before moving on to installation information, let's stop to summarize what we've
 1. DogstatsD aggregates 10 seconds worth of data and passes it along for storage
 1. Datadog stores the data for viewing within their admin panel
 
-Note that any of these 4 components can be exchanged for alternatives and in some cases, skipped completely. What I like about these components are that each one has a distinct purposes and is built without concern for any for other components in the system.
+Note that any of these 4 components can be exchanged for alternatives and in some cases, skipped completely. What I like about these components are that each one has a distinct purpose and is built without concern for any for other components in the system.
 
 In this article, I am presenting the tools I am using as a simple and dirt cheap way to get started with monitoring. The implementation I will discuss is not built for high traffic, high availability monitoring; rather, it focuses on a reasonably approachable and affordable solution for those without big budgets who want to begin with RUM. Most certainly, this set up can be enhanced to handle a more robust load, but this article will not discuss those details.
 
@@ -160,7 +160,7 @@ In this article, I am presenting the tools I am using as a simple and dirt cheap
 
 Setting up Boomerang is a convoluted process of adding JS to your website. It basically comes down to adding a script to your site, but the documentation will drive you nuts trying to figure out exactly how to put it all together. Hopefully I can help clarify some of the pain points.
 
-For Boomerang to work, you must include the [main Boomerang script](https://github.com/lognormal/boomerang/blob/master/boomerang.js), as well as at least one [plugin](https://github.com/lognormal/boomerang/blob/master/plugins) and configure the Boomerang with at least a the `beacon_url` option. Boomerang has 15 plugins available and you can write additional plugins as you see fit. To get started, you need to pick at least one plugin. I initially chose the [navtiming.js](https://github.com/lognormal/boomerang/blob/master/plugins/navtiming.js) and [rt.js](https://github.com/lognormal/boomerang/blob/master/plugins/rt.js) plugins, which collect metrics from the W3C Navigation Timing API and round trip time, respectively. I also chose to send the beacon requests simply to `/beacon`. I downloaded all of my chosen scripts and added the following to the footer of my site:
+For Boomerang to work, you must include the [main Boomerang script](https://github.com/lognormal/boomerang/blob/master/boomerang.js), as well as at least one [plugin](https://github.com/lognormal/boomerang/blob/master/plugins) and configure the main Boomerang object with at least the `beacon_url` option. Boomerang has 15 plugins available and you can write additional plugins as you see fit. To get started, you need to pick at least one plugin. I initially chose the [navtiming.js](https://github.com/lognormal/boomerang/blob/master/plugins/navtiming.js) and [rt.js](https://github.com/lognormal/boomerang/blob/master/plugins/rt.js) plugins, which collect metrics from the W3C Navigation Timing API and round trip time, respectively. I also chose to send the beacon requests simply to `/beacon`. I downloaded all of my chosen scripts and added the following to the footer of my site:
 
 {% highlight html %}
 <script src="/js/boomerang.js"></script>
@@ -215,11 +215,11 @@ v:0.9
 vis.st:visible
 {% endhighlight %}
 
-Clearly things are working! If you are following along, I'd recommend experimenting with additional plugins at this time to see the data that it will produce. All you need to do is add the `script` tag for the plugin that you wish to try and view the resulting data to see if it fits your needs.
+Clearly things are working! I'd recommend experimenting with additional plugins at this time to see the data that it will produce. All you need to do is add the `script` tag for the plugin that you wish to try and view the resulting data to see if it fits your needs.
 
 If you read the documentation for Boomerang, it will suggest that you use an async loading mechanism for the scripts. In my experience, I completely agree. Just adding this monitoring to my site cost me about 500ms in start render time. Given that my start render was at about 700ms, this was not acceptable. I used the recommended async loading technique as a result<span class="footnote-article-number">1</span>.
 
-The documentation will suggest that you use an included `make` command to build a single concatenated and minified script to async load; however, in my experience, this `make` command was badly broken. It seemed to include plugins I did not want, as well as exclude ones I did want. As such, I recommend skipping the `make` command. Instead, manually add boomerang.js, the desired plugins, and the call to `BOOMR.init` in a file. Be sure to minify it after concatenating these files. Name it with a version number to make it easy to purge from caches if you ever update it.
+The documentation will suggest that you use an included `make` command to build a single concatenated and minified script to async load; however, in my experience, the `make` command was badly broken. It seemed to include plugins I did not want, as well as exclude ones I did want. As such, I recommend skipping the `make` command. Instead, manually add boomerang.js, desired plugins, and the call to `BOOMR.init` to a single file. Be sure to minify it after concatenating these files. Name it with a version number to make it easy to purge from caches if you ever update it.
 
 Once you have the single file prepared, add the following code to the *header* of your site, being sure to update the path to the concatenated and minified file:
 
@@ -239,14 +239,14 @@ With this async loading method in place, I was able to see a better start render
 
 ## Installing Boomcatch
 
-Now that Boomerang is sending requests to `/beacon`, we need to set up Boomcatch to receive those requests. Boomcatch is a interprets a request URL and converts the data into the StatsD metric format to pass along to DogstatsD. It takes the raw data passed as `GET` variables shown above and translates it in into metrics data. I like to use Boomcatch for this because it was built by the maintainers of Boomerang for the sole purpose of processing Boomerang beacon requests for StatsD. Conceptually, this is simple software; however, it's a tedious application to write and happy to use something that just works. Boomcatch has properly handled all of the Boomerang plugin data that I've thrown at it.
+Now that Boomerang is sending requests to `/beacon`, we need to set up Boomcatch to receive those requests. Boomcatch interprets a request URL and converts the data into the StatsD metric format to pass along to DogstatsD. It takes the raw data passed as `GET` variables shown above and translates it in into metrics data. I like to use Boomcatch for this because it was built by the maintainers of Boomerang for the sole purpose of processing Boomerang beacon requests for StatsD. Conceptually, this is simple software; however, it's a tedious application to write and I am happy to use something that just works. Boomcatch has properly handled all of the Boomerang plugin data that I've thrown at it.
 
 Boomcatch is highly customizable, but most importantly allows you to specify the following:
 
-1. Validators: checks that will either allow a request to proceed or exit
-1. Filters: remove unnecessary pieces of data
-1. Mappers: converts data from one format to another
-1. Forwarders: sends the mapped data to another service to be further processed
+1. *Validators*: checks that will either allow a request to proceed or exit
+1. *Filters*: remove unnecessary pieces of data
+1. *Mappers*: converts data from one format to another
+1. *Forwarders*: sends the mapped data to another service to be further processed
 
 These four processes allow a developer to customize the data for the 3rd component's needs. Fortunately, all of the processes are automatically handled via Boomcatch when using Boomerang and its plugins. If you develop your own Boomerang plugin, you would need to write components for Boomcatch to handle that new data.
 
@@ -256,7 +256,7 @@ As I walk through installing Boomcatch, I will be focusing on installing on Ubun
 sudo apt-get install nodejs
 {% endhighlight %}
 
-To save you some headache, I ran into an issue with trying to run Boomcatch as a daemon when because Node is `nodejs` on Ubuntu. I [symlinked](http://askubuntu.com/a/477587) `nodejs` to `node`:
+To save you some headache, I ran into an issue with trying to run Boomcatch as a daemon because Node is `nodejs` on Ubuntu. I [symlinked](http://askubuntu.com/a/477587) `nodejs` to `node`:
 
 {% highlight bash %}
 sudo ln -s /usr/local/bin/nodejs /usr/bin/node
@@ -296,7 +296,7 @@ Running this command will showing logging in the terminal:
 2015-07-02 12:37:34 INFO boomcatch: listening for 127.0.0.1:8888/beacon
 {% endhighlight %}
 
-This will only accept connections from the server on port 8888. To test if Boomcatch is working, open another terminal window, SSH into the server and issue the following command:
+This will only accept connections *from the server* on port 8888. To test if Boomcatch is working, open another terminal window, SSH into the server and issue the following command:
 
 {% highlight bash %}
 curl 127.0.0.1/beacon:8888
@@ -324,7 +324,7 @@ location ~* /beacon(.*)$ {
 
 I use Nginx's `location` block and `proxy_pass` directive to proxy requests to `/beacon` to `127.0.0.1:8888` where my Boomcatch server is located. I like this setup personally because I manage all TLS related concerns in once place, as opposed to configuring TLS in two places (one for Nghttpx and another for Boomcatch). Additionally, Nghttpx offers better HTTPS configuration capabilities than Boomcatch.
 
-All that said, you can definitely use Boomcatch's options to configure your setup however you want. If you set a non-local host name and make sure the port is open, you will be able to connect to it without much trouble.
+All that said, you can definitely use Boomcatch's options to configure your setup however you want. If you set a non-local host name and make sure the port is open, you will be able to connect to it from external locations without much trouble. In fact, if you try to scale this out, you will probably have a server dedicated to Boomcatch.
 
 Now that we can connect to Boomcatch locally and externally with a little Nginx hackery, let's set up Boomcatch to run as a daemon. To do so, I turned to Forever, a Node package for running Node servers as daemons. First, you need to install Forever:
 
@@ -342,15 +342,9 @@ sudo touch /var/log/boomcatch/boomcatch-access.log
 sudo touch /var/log/boomcatch/boomcatch-error.log
 {% endhighlight %}
 
-Using the following command, Boomcatch is executed as a daemon (note that I am creating logs before starting Forever):
+Using the following command, Boomcatch is executed as a daemon:
 
 {% highlight bash %}
-# Set up needed logs
-sudo mkdir -p /var/log/boomcatch/
-sudo touch /var/log/boomcatch/boomcatch-forever.log
-sudo touch /var/log/boomcatch/boomcatch-access.log
-sudo touch /var/log/boomcatch/boomcatch-error.log
-
 sudo forever -sa \
   -l /var/log/boomcatch/boomcatch-forever.log \
   -o /var/log/boomcatch/boomcatch-access.log \
@@ -372,7 +366,7 @@ root     15460  1.8  3.0 669856 15344 pts/0    Sl   13:03   0:00 /usr/bin/nodejs
 root     15468  0.0  0.1  11740   940 pts/2    S+   13:03   0:00 grep --color=auto boomcatch
 {% endhighlight %}
 
-Alternatively, you can `tail` the Boomcatch access log, issues requests and look for a new log to be generated:
+Alternatively, you can `tail` the Boomcatch access log, issue test requests, and look for new logs to be generated:
 
 {% highlight bash %}
 tail -f /var/log/boomcatch/boomcatch-access.log
@@ -394,12 +388,12 @@ As long as you are seeing new logs generated as you visit your site, things are 
 
 If you made it this far, the rest is downhill from here. The last two components are DogstatsD and the Datadog agent. Recalling the general setup described above, Boomcatch passes metrics formatted data to DogstatsD, which aggregates the data and passes it along to Datadog for storage. If we were not using Datadog, this step would involve installing and configuring StatsD, then installing and configuring some storage engine for the metrics data. For a small and affordable setup, I recommend Datadog for the following reasons:
 
-1. They has a free 24 hour data retention plan. Signing up for an account only requires an email address and password (i.e., no credit card required)
+1. They have a robust free plan. Signing up for an account only requires an email address and password (i.e., no credit card required)
 1. The agent that is installed tracks a lot of data out of the box and can be used for much more than the data we are tracking in this tutorial
 1. It handles the storage engine setup for you, which can be a little tricky to get set up on your own
 1. Not only is it a storage engine, it also provides a highly configurable graphing interface on top of this data
 
-To install the Datadog agent, first [sign up](https://www.datadoghq.com/) for an account. It will prompt you to install the agent on your server. This involves running their installer which is boiled down to a simple bash command. That's it! Once the agent is install you should be able to see data pouring in on your Datadog dashboard.
+To install the Datadog agent, first [sign up](https://www.datadoghq.com/) for an account. It will prompt you to install the agent on your server. This involves running their installer which is boiled down to a simple bash command. *That's it!* Once the agent is installed you should be able to see data pouring into your Datadog dashboard.
 
 Installing the agent also installed DogstatsD. When we configured Boomcatch, we did not discuss anything related to passing data on to DogstatsD. By default, Boomcatch forwards data on to port 8125. This port is the default of StatsD, as well as DogstatsD. So long as you didn't configure a different forwarding port for Boomcatch, your Boomerang data will already be pouring into DogstatsD.
 
@@ -421,6 +415,6 @@ This is not too impressive due to low traffic to my site, but still gives me ins
 
 ## Conclusion
 
-A performance monitoring solution is not the easiest thing to set up. You typically have to chosen between and expensive SaaS solution or a difficult-to-install SaaS solution. I have been trying to bridge this gap for some time and the methods presented here are the closest I've gotten to a low cost, relatively easy to set up performance monitoring solution. The cost of this setup is $0 given that I am running the server components on a server that I am already running. With this basic setup, one can begin to monitor important metrics for her app with all of the important components in place. And with active measuring, you can begin optimizing!
+A performance monitoring solution is not the easiest thing to set up. You typically have to chose between and expensive SaaS solutions or a difficult-to-install DIY solution. I have been trying to bridge this gap for some time and the methods presented here are the closest I've gotten to a low cost, relatively easy to set up performance monitoring solution. The cost of this setup is $0 given that I am running the server components on a server that I am already running. With this basic setup, one can begin to monitor important metrics for her app with all of the important components in place. And with active measuring, you can begin optimizing!
 
 <p class="footnote"><span class="footnote-footer-number">1</span> If you read the Boomerang JS documentation, they recommend another async technique involving <a href="http://www.phpied.com/non-onload-blocking-async-js/">loading an iframe</a>. I tried and tried to get this method to work, but to no avail. It would simply not collect all of the metrics that Boomerang was supposed to collect when using the iframe technique.
