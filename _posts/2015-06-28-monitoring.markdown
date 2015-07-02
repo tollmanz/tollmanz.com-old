@@ -1,23 +1,23 @@
 ---
 layout:     post
-title:      "An Almost Free, DIY Solution for Monitoring Performance Data"
-date:       2015-06-28 23:00:00
+title:      "A Low Cost Performance Monitoring Setup with Boomerang, Boomcatch, and Datadog"
+date:       2015-07-02 12:00:00
 categories: monitoring, performance
 ---
 
-Real User Monitoring (RUM) is an important aspect of performance optimization. RUM allows you to track and analyze how real world users of your web properties *actually* experience your website. RUM is an important part of performance monitoring as you collect the real experiences of your users, as opposed to the contrived data inherit in synthetic monitoring (e.g., [Web Page Test](http://www.webpagetest.org); it's still really important!). If you've ever used Google Analytics, you've engaged in RUM before; however, RUM for web performance is more difficult because there is no service like Google Analytics that makes setting up web performance monitoring so easy. Well...there are a number of easy-to-install, pricey SaaS offerings, but those tend to be out of reach for the web performance enthusiast that wants to get started with RUM.
+Real User Monitoring (RUM) is an important aspect of performance optimization. RUM allows you to track and analyze how real world users of your web properties *actually* experience your website. RUM allows you to collect the real experiences of your users, as opposed to the contrived data inherit in synthetic monitoring (e.g., [Web Page Test](http://www.webpagetest.org); it's still really important!). If you've ever used Google Analytics, you've engaged in RUM before; however, RUM for web performance is more difficult because there is no service like Google Analytics that makes setting up web performance monitoring so easy. Well...there are a number of easy-to-install, pricey SaaS offerings, but those tend to be out of reach for the web performance enthusiast that wants to get started with RUM.
 
-In this article, I want to introduce you to components of an inexpensive system to setting up RUM for a website. The set up is not for the faint of heart, but it is by far the easiest system I've put together for simple RUM. I will first discuss the components of the system, then dive into instructions for how you can set up such a system.
+In this article, I want to introduce you to components of an inexpensive system to setting up RUM for a website. I will show you how to setup a RUM system for no more than the cost of your current hosting (i.e., $0 extra cost). The set up is not for the faint of heart, but it is by far the easiest system I've put together for simple RUM. I will first discuss the components of the system, then dive into instructions for how you can set up such a system.
 
-## General Setup
+## Conceptualizing the Components of the System
 
 For our performance monitoring setup to work, we need four main components. Having each of these components perform an individual task makes the focus of each component very specific; however, it comes at the cost of maintaining separate systems. Fortunately, the method I'll discuss is not terribly frustrating.
 
-**Component 1: Javascript Data Collection**
+**Component 1: Client Side Data Collection with Javascript**
 
-We are attempting to collect front end performance data. Without controlling the client connecting to the website, we are left to depend on JS APIs to collect data on the client side. The [Navigation Timing](https://developer.mozilla.org/en-US/docs/Navigation_timing) and [Resource Timing](http://www.w3.org/TR/resource-timing/) APIs, along with the clever timing of events on the client can all provide useful data about your site's performance. The first part of our monitoring involves uses these APIs and custom JS to collect the metrics we intend to track.
+We are attempting to collect front-end performance data. Without controlling the client connecting to the website, we are left to depend on JS APIs to collect data on the client side. The [Navigation Timing](https://developer.mozilla.org/en-US/docs/Navigation_timing) and [Resource Timing](http://www.w3.org/TR/resource-timing/) APIs, along with the clever timing of events on the client can all provide useful data about your site's performance. The first part of our monitoring involves using these APIs and custom JS to collect the metrics we intend to track.
 
-To this end, I use the wonderful [Boomerang](https://github.com/lognormal/boomerang) JS component for this purpose. Originally, developed by Yahoo, this library is currently maintained by [SOASTA](http://www.soasta.com/), a monitoring SaaS. As far as I can tell, the script is similar to what you would deploy on your site if you used SOASTA's service. It handles the hard work of normalizing data across browsers, surfacing useful metrics, and kicking off a beacon request so the data can be recorded. Boomerang has a plugin architecture that allows you to add more data to the beacon request. Additionally, the library comes with a number of plugins that exposes data that most people will already be interested in.
+To this end, I use the wonderful [Boomerang](https://github.com/lognormal/boomerang) JS component for this purpose. Originally developed by Yahoo, this library is currently maintained by [SOASTA](http://www.soasta.com/), a monitoring SaaS. As far as I can tell, the script is similar to what you would deploy on your site if you used SOASTA's service. It handles the hard work of normalizing data across browsers, surfacing useful metrics, and kicking off a beacon request so the data can be recorded. Boomerang has a plugin architecture that allows you to add more data to the beacon request. Additionally, the library comes with a number of plugins that exposes data that most people will already be interested in.
 
 This component is only concerned with *taking measurements* and does not care about data format or storage. After taking its measurements, it passes the data to the next component in the system so it can be formatted and stored. As an example, Boomerang sends a request like the following on my website:
 
@@ -37,7 +37,7 @@ nt_first_paint=1435547328.33595&u=https%3A%2F%2Fwww.tollmanz.com%2Fhttp2-nghttp2
 &v=0.9&vis.st=visible
 {% endhighlight %}
 
-To ravel that a bit, an easier to read version of the GET vars looks like:
+To unravel that a bit, an easier to read version of the GET vars looks like:
 
 {% highlight bash %}
 rt.start:navigation
@@ -392,7 +392,35 @@ As long as you are seeing new logs generated as you visit your site, things are 
 
 ## Installing Datadog with DogstatsD
 
-## Setting up Dashboards
+If you made it this far, the rest is downhill from here. The last two components are DogstatsD and the Datadog agent. Recalling the general setup described above, Boomcatch passes metrics formatted data to DogstatsD, which aggregates the data and passes it along to Datadog for storage. If we were not using Datadog, this step would involve installing and configuring StatsD, then installing and configuring some storage engine for the metrics data. For a small and affordable setup, I recommend Datadog for the following reasons:
 
+1. They has a free 24 hour data retention plan. Signing up for an account only requires an email address and password (i.e., no credit card required)
+1. The agent that is installed tracks a lot of data out of the box and can be used for much more than the data we are tracking in this tutorial
+1. It handles the storage engine setup for you, which can be a little tricky to get set up on your own
+1. Not only is it a storage engine, it also provides a highly configurable graphing interface on top of this data
+
+To install the Datadog agent, first [sign up](https://www.datadoghq.com/) for an account. It will prompt you to install the agent on your server. This involves running their installer which is boiled down to a simple bash command. That's it! Once the agent is install you should be able to see data pouring in on your Datadog dashboard.
+
+Installing the agent also installed DogstatsD. When we configured Boomcatch, we did not discuss anything related to passing data on to DogstatsD. By default, Boomcatch forwards data on to port 8125. This port is the default of StatsD, as well as DogstatsD. So long as you didn't configure a different forwarding port for Boomcatch, your Boomerang data will already be pouring into DogstatsD.
+
+While it didn't seem like we did much here, we actually did quite a bit by installing the Datadog agent. The single command installed and configured everything we needed to satisfy components 3 and 4 discussed above. Now that we are collecting data, we only have one thing left to do; visualize the data!
+
+## Viewing Data
+
+To complete our data tracking journey, open up "Metrics Explorer" in Datadog (Metrics > Explorer). Be sure to visit your site a few times to collect some data. Once data is in the system, go to the "Graph" box on the "Metrics Explorer" dashboard. Type in "rt" to find the data related to round trip time that Boomerang was measuring. If all is working well, you should see something like:
+
+![](/media/images/round-trip-metrics.png "Round trip metrics reported")
+
+If you are not seeing this data, try visiting your site some more, waiting a minute and reload the "Metrics Explorer" dashboard.
+
+Now that the data is piping into Datadog, you can begin to experiment with different dashboards to visualize the data. I set up a front end performance dashboard to visualize the navtiming and rt data:
+
+![](/media/images/dashboard-metrics.png "Dashboard for front end metrics")
+
+This is not too impressive due to low traffic to my site, but still gives me insight that I need.
+
+## Conclusion
+
+A performance monitoring solution is not the easiest thing to set up. You typically have to chosen between and expensive SaaS solution or a difficult-to-install SaaS solution. I have been trying to bridge this gap for some time and the methods presented here are the closest I've gotten to a low cost, relatively easy to set up performance monitoring solution. The cost of this setup is $0 given that I am running the server components on a server that I am already running. With this basic setup, one can begin to monitor important metrics for her app with all of the important components in place. And with active measuring, you can begin optimizing!
 
 <p class="footnote"><span class="footnote-footer-number">1</span> If you read the Boomerang JS documentation, they recommend another async technique involving <a href="http://www.phpied.com/non-onload-blocking-async-js/">loading an iframe</a>. I tried and tried to get this method to work, but to no avail. It would simply not collect all of the metrics that Boomerang was supposed to collect when using the iframe technique.
