@@ -89,15 +89,6 @@ After Boomerang sends a beacon request, it must be handled by a server side comp
 
 For this middleware, I use [Boomcatch](https://github.com/nature/boomcatch), which is a middleware that was built specifically for use with Boomerang. Boomerang is a [Node based server](http://cruft.io/posts/introducing-boomcatch/) that handles the Boomerang formatted data. You could write your own middleware, but the beauty of Boomcatch is that it will process all of the core Boomerang plugin data out of the box.
 
-Boomcatch is highly customizable, but most importantly allows you to specify the following:
-
-1. Validators: checks that will either allow a request to proceed or exit
-1. Filters: remove unnecessary pieces of data
-1. Mappers: converts data from one format to another
-1. Forwarders: sends the mapped data to another service to be further processed
-
-These four processes allow a developer to customize the data for the 3rd component's needs. Fortunately, all of the processes are automatically, handled via Boomcatch when using Boomerang and its plugins.
-
 As an example of how Boomcatch handles data, the following reformatted log shows how a request is manipulated into more manageable data and it is passed to our 3rd component:
 
 {% highlight bash %}
@@ -248,7 +239,158 @@ With this async loading method in place, I was able to see a better start render
 
 ## Installing Boomcatch
 
-## Installing Datadog
+Now that Boomerang is sending requests to `/beacon`, we need to set up Boomcatch to receive those requests. Boomcatch is a interprets a request URL and converts the data into the StatsD metric format to pass along to DogstatsD. It takes the raw data passed as `GET` variables shown above and translates it in into metrics data. I like to use Boomcatch for this because it was built by the maintainers of Boomerang for the sole purpose of processing Boomerang beacon requests for StatsD. Conceptually, this is simple software; however, it's a tedious application to write and happy to use something that just works. Boomcatch has properly handled all of the Boomerang plugin data that I've thrown at it.
+
+Boomcatch is highly customizable, but most importantly allows you to specify the following:
+
+1. Validators: checks that will either allow a request to proceed or exit
+1. Filters: remove unnecessary pieces of data
+1. Mappers: converts data from one format to another
+1. Forwarders: sends the mapped data to another service to be further processed
+
+These four processes allow a developer to customize the data for the 3rd component's needs. Fortunately, all of the processes are automatically handled via Boomcatch when using Boomerang and its plugins. If you develop your own Boomerang plugin, you would need to write components for Boomcatch to handle that new data.
+
+As I walk through installing Boomcatch, I will be focusing on installing on Ubuntu 14.04. Since Boomcatch is a Node application, it shouldn't be too tough to apply these instructions to other distros. Before starting, make sure you have `nodejs` and `npm` installed:
+
+{% highlight bash %}
+sudo apt-get install nodejs
+{% endhighlight %}
+
+To save you some headache, I ran into an issue with trying to run Boomcatch as a daemon when because Node is `nodejs` on Ubuntu. I [symlinked](http://askubuntu.com/a/477587) `nodejs` to `node`:
+
+{% highlight bash %}
+sudo ln -s /usr/local/bin/nodejs /usr/bin/node
+{% endhighlight %}
+
+With this set, we just need to install the `boomcatch` package:
+
+{% highlight bash %}
+sudo npm install boomcatch -g
+{% endhighlight %}
+
+If everything went well, you should be able to see the available options with the following command:
+
+{% highlight bash %}
+boomcatch --help
+{% endhighlight %}
+
+Boomcatch is an HTTP(S) server with an integrated application. Most of the options available are intended to configure how the server behaves. There are many ways in which you can set up the server. What I'll show you here is my preference for the system I'm discussing, but please read through the options and configure the right setup for yourself.
+
+The primary options I want to configure are `port` and `host`. I'm setting this up on a server that also hosts the website itself and need to make sure that I'm connecting using a different port. As such, I run Boomcatch with the following settings:
+
+{% highlight bash %}
+boomcatch --port 8888 --host 127.0.0.1
+{% endhighlight %}
+
+Running this command will showing logging in the terminal:
+
+{% highlight bash %}
+2015-07-02 12:37:34 INFO boomcatch: starting boomcatch in process 14737 with options:
+{
+    "port": 8888,
+    "host": "127.0.0.1",
+    "log": {},
+    "workers": 1
+}
+2015-07-02 12:37:34 INFO boomcatch: worker 14739 started
+2015-07-02 12:37:34 INFO boomcatch: listening for 127.0.0.1:8888/beacon
+{% endhighlight %}
+
+This will only accept connections from the server on port 8888. To test if Boomcatch is working, open another terminal window, SSH into the server and issue the following command:
+
+{% highlight bash %}
+curl 127.0.0.1/beacon:8888
+{ "error": "Invalid path `/`" }
+{% endhighlight %}
+
+If you look at the Boomcatch output, you'll see:
+
+{% highlight bash %}
+2015-07-02 12:39:51 INFO boomcatch: referer= user-agent=curl/7.35.0 address=127.0.0.1[] method=GET url=/?test
+2015-07-02 12:39:51 ERROR boomcatch: 404 Invalid path `/`
+{% endhighlight %}
+
+While we are seeing errors here, that is ok. This means that the Boomcatch server is listening to the right port and things seem to be working.
+
+You may be wondering why I am setting up Boomcatch to only listen to requests from `127.0.0.1`. This means that requests can only come from the server itself. For my setup, I am doing this in order to simplify my HTTP/2 and TLS setup. I currently use [`Nghttpx`](/http2-nghttp2-nginx-tls/) as an HTTP/2 proxy. I want to connect to Boomcatch through Nghttpx so that these requests enjoy the HTTP/2 and TLS benefits that I get from Nghttpx. Thus, I use Nghttpx as a proxy for Boomcatch. To make things a little more difficult, I push the request through Nginx. The request goes from Nghttpx => Nginx => Boomcatch.
+
+To facilitate this, I need to add a `location` block to Nginx:
+
+{% highlight bash %}
+location ~* /beacon(.*)$ {
+    proxy_pass    http://127.0.0.1:8888;
+}
+{% endhighlight %}
+
+I use Nginx's `location` block and `proxy_pass` directive to proxy requests to `/beacon` to `127.0.0.1:8888` where my Boomcatch server is located. I like this setup personally because I manage all TLS related concerns in once place, as opposed to configuring TLS in two places (one for Nghttpx and another for Boomcatch). Additionally, Nghttpx offers better HTTPS configuration capabilities than Boomcatch.
+
+All that said, you can definitely use Boomcatch's options to configure your setup however you want. If you set a non-local host name and make sure the port is open, you will be able to connect to it without much trouble.
+
+Now that we can connect to Boomcatch locally and externally with a little Nginx hackery, let's set up Boomcatch to run as a daemon. To do so, I turned to Forever, a Node package for running Node servers as daemons. First, you need to install Forever:
+
+{% highlight bash %}
+npm install forever
+{% endhighlight %}
+
+Also, when I run Forever, I will be logging a few different things. You need to create these logs before running the Forever command:
+
+{% highlight bash %}
+# Set up needed logs
+sudo mkdir -p /var/log/boomcatch/
+sudo touch /var/log/boomcatch/boomcatch-forever.log
+sudo touch /var/log/boomcatch/boomcatch-access.log
+sudo touch /var/log/boomcatch/boomcatch-error.log
+{% endhighlight %}
+
+Using the following command, Boomcatch is executed as a daemon (note that I am creating logs before starting Forever):
+
+{% highlight bash %}
+# Set up needed logs
+sudo mkdir -p /var/log/boomcatch/
+sudo touch /var/log/boomcatch/boomcatch-forever.log
+sudo touch /var/log/boomcatch/boomcatch-access.log
+sudo touch /var/log/boomcatch/boomcatch-error.log
+
+sudo forever -sa \
+  -l /var/log/boomcatch/boomcatch-forever.log \
+  -o /var/log/boomcatch/boomcatch-access.log \
+  -e /var/log/boomcatch/boomcatch-error.log \
+  /usr/local/bin/boomcatch \
+    --port 8888 \
+    --host 127.0.0.1 \
+  > /dev/null 2>&1 &
+{% endhighlight %}
+
+With Forever running Boomcatch as a daemon, the server will run until you quit it. You can detach the terminal and it will still be running. You can see if it is running by checking the running processes:
+
+{% highlight bash %}
+ps aux | grep boomcatch
+root     15451  0.0  0.4  64948  2108 pts/0    S    13:03   0:00 sudo forever -sa -l /var/log/boomcatch/boomcatch-forever.log -o /var/log/boomcatch/boomcatch-access.log -e /var/log/boomcatch/boomcatch-error.log /usr/local/bin/boomcatch --port 8888 --host 127.0.0.1
+root     15452  5.0  4.6 704448 23564 pts/0    Sl   13:03   0:00 node /usr/local/bin/forever -sa -l /var/log/boomcatch/boomcatch-forever.log -o /var/log/boomcatch/boomcatch-access.log -e /var/log/boomcatch/boomcatch-error.log /usr/local/bin/boomcatch --port 8888 --host 127.0.0.1
+root     15458  1.8  2.9 669856 14888 pts/0    Sl   13:03   0:00 /usr/bin/nodejs /usr/local/bin/boomcatch --port 8888 --host 127.0.0.1
+root     15460  1.8  3.0 669856 15344 pts/0    Sl   13:03   0:00 /usr/bin/nodejs /usr/local/bin/boomcatch --port 8888 --host 127.0.0.1
+root     15468  0.0  0.1  11740   940 pts/2    S+   13:03   0:00 grep --color=auto boomcatch
+{% endhighlight %}
+
+Alternatively, you can `tail` the Boomcatch access log, issues requests and look for a new log to be generated:
+
+{% highlight bash %}
+tail -f /var/log/boomcatch/boomcatch-access.log
+
+2015-07-02 13:09:07 INFO boomcatch: sent 63 bytes
+2015-07-02 13:09:13 INFO boomcatch: referer=https://www.tollmanz.com/public-key-pinning-for-http/ user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36 address=127.0.0.1[68.13.74.172] method=GET url=/beacon?rt.start=navigation&rt.tstart=1435856951942&rt.bstart=1435856952540&rt.end=1435856952790&t_resp=369&t_page=479&t_done=848&r=&nt_red_cnt=0&nt_nav_type=0&nt_nav_st=1435856951942&nt_red_st=0&nt_red_end=0&nt_fet_st=1435856952229&nt_dns_st=1435856952229&nt_dns_end=1435856952229&nt_con_st=1435856952229&nt_con_end=1435856952229&nt_req_st=1435856952230&nt_res_st=1435856952311&nt_res_end=1435856952385&nt_domloading=1435856952312&nt_domint=1435856952431&nt_domcontloaded_st=1435856952431&nt_domcontloaded_end=1435856952431&nt_domcomp=1435856952788&nt_load_st=1435856952789&nt_load_end=1435856952789&nt_unload_st=0&nt_unload_end=0&nt_spdy=1&nt_cinf=h2&nt_first_paint=1435856952.436493&u=https%3A%2F%2Fwww.tollmanz.com%2Fpublic-key-pinning-for-http%2F&v=0.9&vis.st=visible
+2015-07-02 13:09:13 INFO boomcatch: sending rt.firstbyte:369|ms
+rt.lastbyte:848|ms
+rt.load:848|ms
+navtiming.response:74|ms
+navtiming.dom:476|ms
+
+2015-07-02 13:09:13 INFO boomcatch: sent 100 bytes
+{% endhighlight %}
+
+As long as you are seeing new logs generated as you visit your site, things are working correctly. With Boomcatch installed and configured, we will now move on the final two components, which are installed and configured together.
+
+## Installing Datadog with DogstatsD
 
 ## Setting up Dashboards
 
