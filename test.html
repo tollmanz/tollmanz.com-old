@@ -1,25 +1,33 @@
+<!DOCTYPE html>
 <html>
   <head>
     <script type="text/javascript" src="http://example.com/script.js"></script>
     <link rel="stylesheet" type="text/css" href="http://example.com/style.css">
+    <title>CSP Test Page</title>
   </head>
   <body>
-    <img src="http://example.com/image.jpg" />
-    <iframe src="http://example.com/iframe" />
+    <img src="https://farm8.staticflickr.com/7374/11226460783_b890aa300f_q.jpg" alt="test image" />
+    <iframe src="https://google.com"></iframe>
 
-    <audio>
-      <source src="http://example.com/audio.ogg" type="audio/ogg">
-      <source src="http://example.com/audio.mp3" type="audio/mpeg">
+    <audio controls>
+      <source src="https://upload.wikimedia.org/wikipedia/commons/9/9d/011229rudolph_quality.ogg" type="audio/ogg">
+      <source src="http://media.bradsucks.net/previews/Brad_Sucks_-_The_First_Thing_About_Me_preview.mp3" type="audio/mpeg">
       Your browser does not support the audio tag.
     </audio>
 
-    <video>
-      <source src="http://example.com/video.mp4" type="video/mp4">
-      <source src="http://example.com/video.ogg" type="video/ogg">
-      <source src="http://example.com/video.webm" type="video/webm">
+    <video width="640" height="360" controls>
+      <source src="http://clips.vorwaerts-gmbh.de/VfE_html5.mp4" type="video/mp4"  /><!-- Safari / iOS, IE9 -->
+      <source src="http://clips.vorwaerts-gmbh.de/VfE.webm"      type="video/webm" /><!-- Chrome10+, Ffx4+, Opera10.6+ -->
+      <source src="http://clips.vorwaerts-gmbh.de/VfE.ogv"       type="video/ogg"  /><!-- Firefox3.6+ / Opera 10.5+ -->
       Your browser does not support the video tag.
     </video>
 
-    <object data="http://example.com/object.swf"></object>
+    <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,29,0" width="400" height="300">
+      <param name="movie" value="http://www.flashppt.com/images/tangramone.swf">
+      <param name="quality" value="high">
+      <embed src="http://www.flashppt.com/images/tangramone.swf" quality="high" pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash" width="400" height="300">
+    </object>
+
+    <img width="16" height="16" alt="star" src="data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7" />
   </body>
 </html>
