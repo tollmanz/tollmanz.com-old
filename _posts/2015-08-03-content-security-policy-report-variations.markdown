@@ -171,6 +171,63 @@ Cookie handling was wildly different between browsers. The CSP2 spec's [only com
 
 >  If the origin of *report URL* is **not** the same as the origin of the protected resource, the block cookies flag MUST also be set.
 
+I interpret this to mean that cookies should only be set if `document-uri` shares the same origin as the CSP report URI. This sharing is sensible given that resource on the same origin should be able to share cookies.
+
+The browsers that sent a cookie during testing were:
+
+* Chrome 14.0 - 44.0
+* Edge 0.11
+* Firefox 9.0 - 14.0
+* Safari 5.1, 6.0, 6.1, 7.0, & 8.0 (OS X)
+* Safari 5.1, 6.0, 7.0, 8.0, 9.0 (iOS)
+* Opera 15.0 - 32.0
+
+Most notably, Firefox stopped sending any cookies since version 14.0. You simply cannot get cookies out of the report in Firefox.
+
+As for other browsers, my tests were inconclusive as to whether they were treating cookies correctly or not. I varied the report URI by port number. I incorrectly thought that cookies were scoped to port; however, I have since learned that that is an [incorrect assumption](http://stackoverflow.com/questions/1612177/are-http-cookies-port-specific/4212964#4212964).
+
+That said, I did collect some data on reporting to different ports and can at least comment on that. Here are a few things I learned:
+
+* As of Chrome 28.0, if the report URI does not match the URI origin and port of the `document-uri`, cookies will not be sent. They are treating separate ports essentially as separate domains.
+* All versions of Opera tested (15.0 - 32.0) must have a port match to send cookies.
+* Firefox (9.0 - 14.0), Safari, and Edge will send cookies regardless of the port match.
+
+I would like to test this again with different domains to see how the behavior changes; however, given the Firefox results, I feel confident in saying that without a change to Firefox, a CSP report collector should not depend on cookies as a major browser would be completely ignored.
+
+**`content-type`**
+
+CSP2 spec [states that CSP report requests](http://www.w3.org/TR/CSP2/#violation-reports) need to use a `content-type` header of `application/csp-report`. In my sample, I observed four different `content-type` headers:
+
+* application/x-www-form-urlencoded
+* application/json
+* application/csp-report
+* application/json; charset=UTF-8
+
+Browsers that are sending the correct `application/csp-report` content-type include:
+
+* Chrome 30.0 - 44.0
+* Opera 17.0 - 32.0
+
+Browsers that send the `application/json` or `application/json; charset=UTF-8` include:
+
+* Safari 7.0, 8.0 (OS X)
+* Safari 7.0, 8.0, 9.0 (iOS)
+* Opera 15.0 - 16.0
+* Firefox 5.0 - 41.0 (5.0 - 14.0 added `charset=UTF-8`)
+* Chrome 21.0 - 29.0
+* Edge 0.11
+
+Finally, browsers that send the `application/x-www-form-urlencoded` content type are:
+
+* Chrome 14.0 - 20.0
+* Safari 5.1, 6.0, 6.1 (OS X)
+* Safari 5.1, 6.0 (iOS)
+
+Interestingly, in building a very naive collector, I had some troubles handling the `application/csp-report` content type. I used [Hapi](http://hapijs.com/) as a Node framework for building this collector, and I had to trick Hapi into thinking it was [dealing with JSON](https://www.tollmanz.com/hapi-415-unsupported-media-type/) in order for the application to properly handle the data. I know content negotiation is a tricky subject so beware of the `application/csp-report` content type with your individual server.
+
+## Discussion
+
+It is clear that different browsers handle CSP reports differently. On the bright side, almost all browsers that support CSP headers, will issue a CSP report (notable exception being IE 10 and 11). While not all browsers follow the CSP2 spec, with some transformations to the POSTed data, a normalized payload can be achieved. Most notably, care has to be taken to transform `blocked-uri`, alter reports without the `csp-report` property, avoid dependence on cookies, as well as properly handle the different content types sent to the collector.
 
 
 
