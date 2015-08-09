@@ -9,14 +9,17 @@ categories: content security policy, monitoring, security
 
 In addition to blocking resources that violate the defined CSP, the CSP spec details a mechanism for sending reports of such violations. Monitoring these violations can help you ensure that your site is never serving content that violates the CSP whether those violations are the result of producer, developer, or hacker actions.
 
-I have been slowly working on an OSS app to express an API for storing and retrieving CSP reports. A major challenge that I have faced with this project is figuring out how to handle the wide array of reports that are sent by different browsers. Armed with an OSS account from [Browserstack]() (thanks Browserstack), I set out to collect CSP violation reports from every browser I could get my hands on to figure out what I should expect when receiving CSP reports. In this article, I will outline the important differences that I observed cross browser with a goal of providing enough information to be able to write a program to normalize such reports.
+I have been slowly working on an OSS app to express an API for storing and retrieving CSP reports. A major challenge that I have faced with this project is figuring out how to handle the wide array of reports that are sent by different browsers. Armed with an OSS account from [Browserstack](https://www.browserstack.com) (thanks Browserstack), I set out to collect CSP violation reports from every browser I could get my hands on to figure out what I should expect when receiving CSP reports. In this article, I will outline the important differences that I observed cross browser with a goal of providing enough information to be able to write a program to normalize such reports.
 
 ## Key Points
 
 This article is going to get deep into the weeds and if you just want the high level findings, here they are:
 
 * I captured more than 2,200 CSP reports that are broken into browser and version and include header information. 
-* To capture most of the variation, there are three different styles of reports that I found. I classify them as "Blink", "Firefox", and "Early Webkit" variants, which can be observed with Chrome 44, Firefox 39, and Chrome 20, respectively.
+* To capture most of the variation, there are three different styles of reports that I found. I classify them as "Blink", "Firefox", "Webkit", and "Old Webkit" variants. Scroll down to the discussion to see samples of these reports.
+* Most important variation that I observed were with the `blocked-uri` property, the potential absence of `csp-report` property, inconsistent cookie handling, and different content types.
+* The current Blink CSP implementation is nearly perfectl as far as I can tell, which means Chrome and Opera are delivering excellent CSP reports. Webkit and Gecko are all over the place with different variations of reports.
+* I have a useful list of tips at the end of this article if you are wanting to deliver CSP headers on your site. 
 
 # Method
 
@@ -107,8 +110,6 @@ The other three non-standard properties were observed in the following browsers:
 * `request-headers`: contains headers sent with request separated by new lines; Firefox 5.0 
 * `document-url`: synonymous with `document-uri`; Safari 5.1, 6.1 (OS X), Safari 5.1, 6.0 (iOS);
 
-## DONT FORGET TO REDO THE DATA TO VERIFY THE DOCUMENT URL STUFF!!!!!
-
 The individual CSP report properties also varied depending on the browser. I will discuss properties that were implemented inconsistently across browsers. Any property not mentioned is assumed to be consistent across browsers.
 
 **`blocked-uri`**
@@ -134,6 +135,19 @@ If you look at the data collected, you will see that the `original-policy` value
 **`referrer`**
 
 Unfortunately, `referrer` was not properly tested. `referrer` has a value when a CSP report is triggered via an identifiable referrer. In my tests, I did not have any referrers trigger CSP reports because none the violating resources were caused by a referrer. This violation occurs when, for example, a non-violating script loads a resource that triggers a violation. The non-violating script is then passed as the referrer. I am actually only now realizing that I didn't properly evaluate this and will have to look into it another time.
+
+**`effective-directive`**
+
+The `effective-directive` property is unfortunately, the most underused CSP report property. The `effective-directive` gives you information on the most specific directive that was violated, even if that directive was not defined. For instance, if your CSP header is `default-src https://example.com` and an image triggers a CSP report, the `effective-directive` property will be `img-src`. Since the "effective" `img-src` directive is `img-src https://example.com`, that is what is reported. This property is helpful in categorizing violations.
+
+This property is different than `violated-directive` in that `violated-directive` gives you the directive that was violated, not the "effective" directive. If you CSP header is `default-src https://example.com` and an image triggers a CSP report, the `violated-directive` will be `default-src https://example.com`; much less specific than the `effective-directive`.
+
+The only browsers supporting the `effective-directive` a the time of this writing are:
+
+* Chrome 40.0 - 44.0
+* Opera 27.0 - 32.0
+
+The lesson here is that you absolutely should not rely on `effective-directive` for categorizing your reports, as this will lead to much missing data. In the discussion below, I have a tip for how you can normalize this across browsers.
 
 **`violated-directive`**
 
@@ -167,7 +181,7 @@ Like with the CSP report payload, I will only discuss noteworthy differences bet
 
 **`cookie`**
 
-Cookie handling was wildly different between browsers. The CSP2 spec's [only comment]() on the matter is (emphasis their's):
+Cookie handling was wildly different between browsers. The CSP2 spec's [only comment](http://www.w3.org/TR/CSP2/#violation-reports) on the matter is (their emphasis):
 
 >  If the origin of *report URL* is **not** the same as the origin of the protected resource, the block cookies flag MUST also be set.
 
@@ -229,35 +243,145 @@ Interestingly, in building a very naive collector, I had some troubles handling 
 
 It is clear that different browsers handle CSP reports differently. On the bright side, almost all browsers that support CSP headers, will issue a CSP report (notable exception being IE 10 and 11). While not all browsers follow the CSP2 spec, with some transformations to the POSTed data, a normalized payload can be achieved. Most notably, care has to be taken to transform `blocked-uri`, alter reports without the `csp-report` property, avoid dependence on cookies, as well as properly handle the different content types sent to the collector.
 
+From what I observed, there are essentially four categories of CSP reports:
+
+* Blink
+* Firefox
+* Webkit
+* Old Webkit
+
+Each of these four categories have variation within, but you can see sample reports, including headers for each below. Please note that this should only serve as rough guidelines of the different representations, these will vary from browser to browser and version to version:
+
+* Blink: Modern Chrome and Opera; exemplifies adherence to the CSP standard
+
+{% highlight bash %}
+"header": {
+  "host": "45.55.25.245:8123",
+  "connection": "keep-alive",
+  "content-length": "869",
+  "origin": "http://45.55.25.245:8123",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.65 Safari/537.36",
+  "content-type": "application/csp-report",
+  "accept": "*/*",
+  "referer": "http://45.55.25.245:8123/csp?os=OS%20X&device=&browser_version=43.0&browser=chrome&os_version=Lion",
+  "accept-encoding": "gzip, deflate",
+  "accept-language": "en-US,en;q=0.8",
+  "cookie": "snickerdoodle=cinnamon",
+},
+"body": {
+  "csp-report": {
+    "document-uri": "http://45.55.25.245:8123/csp?os=OS%20X&device=&browser_version=43.0&browser=chrome&os_version=Lion",
+    "referrer": "",
+    "violated-directive": "child-src https://45.55.25.245:8123/",
+    "effective-directive": "frame-src",
+    "original-policy": "default-src  https://45.55.25.245:8123/; child-src  https://45.55.25.245:8123/; connect-src  https://45.55.25.245:8123/; font-src  https://45.55.25.245:8123/; img-src  https://45.55.25.245:8123/; media-src  https://45.55.25.245:8123/; object-src  https://45.55.25.245:8123/; script-src  https://45.55.25.245:8123/; style-src  https://45.55.25.245:8123/; form-action  https://45.55.25.245:8123/; frame-ancestors 'none'; plugin-types 'none'; report-uri http://45.55.25.245:8123/csp-report?os=OS%20X&device=&browser_version=43.0&browser=chrome&os_version=Lion",
+    "blocked-uri": "http://google.com",
+    "status-code": 200
+  }
+}
+{% endhighlight %}
+
+* Firefox: Mostly seen in Firefox, but also similar to Edge's implementation
+
+{% highlight bash %}
+"header": {
+  "host": "45.55.25.245:8123",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0",
+  "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "accept-language": "en-US,en;q=0.5",
+  "accept-encoding": "gzip, deflate",
+  "content-length": "1049",
+  "content-type": "application/json",
+  "connection": "close"
+},
+"body": {
+  "csp-report": {
+    "blocked-uri": "data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7",
+    "document-uri": "http://45.55.25.245:8123/csp?os=OS%20X&device=&browser_version=37.0&browser=firefox&os_version=Yosemite",
+    "original-policy": "default-src https://45.55.25.245:8123/; connect-src https://45.55.25.245:8123/; font-src https://45.55.25.245:8123/; img-src https://45.55.25.245:8123/; media-src https://45.55.25.245:8123/; object-src https://45.55.25.245:8123/; script-src https://45.55.25.245:8123/; style-src https://45.55.25.245:8123/; form-action https://45.55.25.245:8123/; frame-ancestors 'none'; report-uri http://45.55.25.245:8123/csp-report?os=OS%20X&device=&browser_version=37.0&browser=firefox&os_version=Yosemite",
+    "referrer": "",
+    "violated-directive": "img-src https://45.55.25.245:8123/"
+  }
+}
+{% endhighlight %}
+
+* Webkit: Current Webkit implementation (e.g., Safari, per-blink Chrome). I get the sense that after Chrome forked Webkit to Blink, CSP handling stagnated in Webkit, but that is purely conjecture.
+
+{% highlight bash %}
+"header": {
+  "host": "45.55.25.245:8123",
+  "connection": "keep-alive",
+  "content-length": "805",
+  "origin": "null",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.101 Safari/537.11",
+  "content-type": "application/json",
+  "accept": "*/*",
+  "referer": "http://45.55.25.245:8123/csp?os=OS%20X&device=&browser_version=23.0&browser=chrome&os_version=Lion",
+  "accept-encoding": "gzip,deflate,sdch",
+  "accept-language": "en-US,en;q=0.8",
+  "accept-charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
+  "cookie": "snickerdoodle=cinnamon"
+},
+"body": {
+  "csp-report": {
+    "document-uri": "http://45.55.25.245:8123/csp?os=OS%20X&device=&browser_version=23.0&browser=chrome&os_version=Lion",
+    "violated-directive": "default-src https://45.55.25.245:8123/",
+    "original-policy": "default-src  https://45.55.25.245:8123/; child-src  https://45.55.25.245:8123/; connect-src  https://45.55.25.245:8123/; font-src  https://45.55.25.245:8123/; img-src  https://45.55.25.245:8123/; media-src  https://45.55.25.245:8123/; object-src  https://45.55.25.245:8123/; script-src  https://45.55.25.245:8123/; style-src  https://45.55.25.245:8123/; form-action  https://45.55.25.245:8123/; frame-ancestors 'none'; plugin-types 'none'; report-uri http://45.55.25.245:8123/csp-report?os=OS%20X&device=&browser_version=23.0&browser=chrome&os_version=Lion",
+    "blocked-uri": "http://google.com"
+  }
+}
+{% endhighlight %}
+
+* Old Webkit: primarily seen in older Webkit based browser (e.g., pre-blink Chrome, Safari)
+
+{% highlight bash %}
+"header": {
+  "host": "45.55.25.245:8123",
+  "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/534.57.7 (KHTML, like Gecko) Version/5.1.5 Safari/534.55.3",
+  "content-length": "216",
+  "accept": "*/*",
+  "origin": "null",
+  "content-type": "application/x-www-form-urlencoded",
+  "referer": "http://45.55.25.245:8123/csp?os=OS%2520X&device=&browser_version=3.6&browser=firefox&os_version=Yosemite",
+  "accept-language": "en-us",
+  "accept-encoding": "gzip, deflate",
+  "cookie": "snickerdoodle=cinnamon",
+  "connection": "close"
+},
+"body": {
+  "document-url": "http://45.55.25.245:8123/csp?os=OS%2520X&device=&browser_version=3.6&browser=firefox&os_version=Yosemite",
+  "violated-directive": "object-src https://45.55.25.245:8123/"
+}
+{% endhighlight %}
+
+If you are writing a CSP report collector, I would recommend starting with those variations. They are a good representation of the different reports you will see. If you need a bigger sample, feel free to check out the full raw [JSON dump](https://raw.githubusercontent.com/tollmanz/report-only-capture/d79a3b89805611d5be3724144e1d24a403ef82b6/data/1439098258289/reports.json).
+
+**Limitations**
+
+This project was not intended to be scientific, but I do cringe when I do things that I know make it harder to make strong claims about the data I collected. The study served the purpose of understanding CSP reports in the wild, but there are some important limitations I must mention.
+
+Some data was collected via automated means whereas other data was collected using virtualized, real browsers. They could have produced variance in the data that is not accounted for.
+
+Browser data was not collected cross platform. A more thorough study would verify and test to see if there is variation between browsers across OS's. I would have been all in for collecting more data this way, but without being able to reliably automate the process, I just don't have the time to manually do this.
+
+A more rigorous test of different kinds of violations would be fruitful. I actually found it hard to produce reliable violations, and in the interest of moving this project along, stopped at only triggering basic violations, roughly 10 per test. I would be interested in seeing a more thorough test of all violations.
+
+Referrers were not properly tested. This was a mistake in my test set that I only discovered once writing up my results. This lack of data is a huge whole in this research.
+
+Testing across domains needs to be conducted, as well as across protocols (e.g., HTTP vs. HTTPS). More exploration of the cookie issues cross domain would be fruitful to understand if there are more specific cases in which cookies could be relied upon. Additionally, I would be interested in seeing how browsers treat HTTPS reporting locations especially with regard to potential issues with mixed content issues and TLS configuration.
+
+## Tips
+
+In doing this work, I learned some useful tricks and tips with regard to CSP usage and would be remiss if I did not share them.
+
+* I found the `'self'` keyword to be tricky to use. Some reports would convert it to the URI origin when reporting it in the `original-policy` property. As you can imagine, this led to confusion as to why my policy was being changed and whether or not my headers were wrong. I found that if I used the URI origin instead of `'self'`, everything was more clear and policies were easier to validate. If you take this advice, make sure that you change the URI origin for each of your staging environments. While you gain clarity, you trade it for some convenience.
+* The `effective-directive` property is immensely helpful for categorizing reports; however, only two browsers support it and they only do so in recent versions. If you want to "polyfill" this for other browsers, you can do so if you define a really specific CSP header and parse the `violated-directive` property. For instance, if your policy is `default-src https://www.example.com; img-src https://www.example.com` and an image triggers a violation, you will receive the `violated-directive` property in a reliable way across most browsers. It will be `img-src https://www.example.com`. You can then use the `img-src` bit in that string to get the "effective directive" information. Note that this only works if your policy is specific.
+* While you cannot change the information that is sent in a report, you can vary the report URL per page. I used this strategy to categorize browsers. For instance, to test Chrome 44.0, I set the following CSP report URI: `http://localhost:8123/csp-report?os=OS+X&os_version=Lion&browser=Chrome&browser_version=44.0`. I can then collect the information sent in the query. This strategy can be useful for any sort of segmentation that you want, so long as you can vary headers on a page by page basis in your app. I can imagine this being used to track violations per vertical.
+* You should use all three CSP related headers in your deployment: `Content-Security-Policy`, `X-Content-Security-Policy`, and `X-Webkit-CSP`. Without the Webkit variant, you'll miss reports from older Safari clients. `X-Content-Security-Policy` has no bearing on reports as the only clients that use it are IE 10 and 11; however, this is still important for blocking resources in those browsers.
 
 
+## Acknowledgments
 
-Note: I really like how this article has "key" points: http://erik.io/blog/2014/03/04/definitive-guide-to-cookie-domains/. Since this will be a deep dive, having such a wrap up would be aces
+I want to thank [Browserstack](https://www.browserstack.com) for giving me an OSS account to do this work. This research is part of my work on building a flexible and well architected CSP collector app. Without Browserstack, there is no way I could have generated the wealth of data that I needed.
 
-* The 'self' keyword is a little tricky. It can be converted to the current domain in some reports. It also can lead to some confusion between dev environments. I personally like writing out the exact URL so it's clearer what I am blocked. Using 'self' confused me a number of times through these tests.
-
-* Tip: Segment content with query vars
-* Chrome used to send cookies, but now only sends cookies with an exact origin/port match
-* Always set all directives for better categorization across browsers
-
-
-Questions to answer:
-
-1. What browsers support what features?
-2. What are all of the different things that you need to support?
-3. Are there groups for the different types of reports?
-
-# Headers
-
-**Content-Type**
-
-**Cookies**
-
-
-
-# Body
-
-
-http://45.55.25.245:8123/csp?os=OS+X&device=&browser_version=9.0&browser=safari&os_version=El+Capitan
-
-http://45.55.25.245:8123/csp?os=ios&device=&browser_version=9.0&browser=iphone&os_version=9.0
+Thanks to Zach Kahn and Max Cutler for testing some browsers that weren't available to me or on Browserstack. I appreciate your help in getting moar data.
