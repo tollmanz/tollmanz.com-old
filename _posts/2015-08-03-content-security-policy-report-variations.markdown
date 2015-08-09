@@ -109,7 +109,7 @@ The other three non-standard properties were observed in the following browsers:
 
 ## DONT FORGET TO REDO THE DATA TO VERIFY THE DOCUMENT URL STUFF!!!!!
 
-The individual CSP report properties also varied depending on the browser. 
+The individual CSP report properties also varied depending on the browser. I will discuss properties that were implemented inconsistently across browsers. Any property not mentioned is assumed to be consistent across browsers.
 
 **`blocked-uri`**
 
@@ -125,7 +125,51 @@ Every single version of Firefox tested (5.0 - 41.0) reported this incorrectly wi
 
 The spec further states that if the violating URI is from the same origin as the `document-uri`, the URI fragment can remain. If not, only the URI origin should be reported. Only Firefox did this incorrectly. For Firefox 5.0 - 41.0, it always reported the full URI, including the fragment, for every `blocked-uri` value. All other browsers that reported a `blocked-uri` (some older browsers didn't) correctly reported the URI with and without the fragment in the correct cases.
 
- 
+Interestingly, Firefox gives you more information than other browsers when reporting `blocked-uri`, but this is [highly](https://lists.w3.org/Archives/Public/public-webappsec/2014Feb/0081.html) [controversial](https://code.google.com/p/chromium/issues/detail?id=313737&thanks=313737&ts=1383237203). If you are expecting CSP reports, you are best to anticipate this overreporting and trim the extra information to conform to the CSP2 spec.
+
+**`original-policy`**
+
+If you look at the data collected, you will see that the `original-policy` values that were collected are highly consistent. This is indeed the case; however, I did notice and issue that I corrected relating to the use of the `'self'` keyword. When using `'self'`, browsers will treat the `original-policy` data differently. For instance, if your policy is `default-src 'self'` and your origin domain is `http://www.example.com`, the reported `original-policy` will either be `default-src 'self'` or `default-src http://www.example.com`. Some browsers translate `'self'` into the domain that `'self'` referred to at that time. This is worth noting as it can lead to confusion. For my tests, I ended up hard-coding the URI into the policy as it led to more consistent reporting and lessened some confusion I had about report inconsistencies (i.e., why is my policy different between test cases?).
+
+**`referrer`**
+
+Unfortunately, `referrer` was not properly tested. `referrer` has a value when a CSP report is triggered via an identifiable referrer. In my tests, I did not have any referrers trigger CSP reports because none the violating resources were caused by a referrer. This violation occurs when, for example, a non-violating script loads a resource that triggers a violation. The non-violating script is then passed as the referrer. I am actually only now realizing that I didn't properly evaluate this and will have to look into it another time.
+
+**`violated-directive`**
+
+The `violated-directive` property was very consistent across browsers with one small exception. In the same browsers that report the `document-url` ("url", not "uri") property, the `violated-directive` property is a directly attached to the main body JSON object, not part of the `csp-report` object. When dealing with these reports from those browsers, you must be careful to look for the property in the correct place.
+
+**Request Headers**
+
+In addition to seeing variation across the JSON payload sent, the request headers showed some important cross browser variation worth discussing.
+
+In total, 17 different request headers were observed:
+
+* host
+* user-agent
+* accept
+* accept-language
+* accept-encoding
+* content-length
+* content-type
+* connection
+* cookie
+* referer
+* cache-control
+* origin
+* x-requested-with
+* accept-charset
+* pragma
+* ua-cpu
+* x-forwarded-for
+
+Like with the CSP report payload, I will only discuss noteworthy differences between browsers here.
+
+**`cookie`**
+
+Cookie handling was wildly different between browsers. The CSP2 spec's [only comment]() on the matter is (emphasis their's):
+
+>  If the origin of *report URL* is **not** the same as the origin of the protected resource, the block cookies flag MUST also be set.
 
 
 
