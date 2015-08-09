@@ -32,13 +32,13 @@ To capture these reports, I wrote a series of Node scripts to build a page with 
 
 I set the following CSP directives to be able to capture the reports:
 
-{% highlight %}
+{% highlight bash %}
 default-src https://localhost:8123/; child-src https://localhost:8123/; connect-src https://localhost:8123/; font-src https://localhost:8123/; img-src https://localhost:8123/; media-src https://localhost:8123/; object-src https://localhost:8123/; script-src https://localhost:8123/; style-src https://localhost:8123/; form-action https://localhost:8123/; frame-ancestors 'none'; plugin-types 'none'; report-uri http://localhost:8123/csp-report
 {% endhighlight %}
 
 This value was set for 3 different headers in order to capture reports for older browsers:
 
-{% highlight %}
+{% highlight bash %}
 Content-Security-Policy
 X-Content-Security-Policy
 X-Webkit-CSP
@@ -46,11 +46,87 @@ X-Webkit-CSP
 
 These policies were applied to a test page that I set up that attempted to load different resources that violated the policies. The [page's HTML](https://github.com/tollmanz/report-only-capture/blob/9a52a5e6c71772953ddb7189fde5f2c61c4b3533/templates/csp.html) at the time of testing can be viewed on GitHub.
 
-When reports were triggered, they were sent to an endpoint defined that grabbed the headers, POST body content, and query args (which contained the browser information) and recorded the data as a JSON object in a document database. A raw [JSON dump](https://raw.githubusercontent.com/tollmanz/report-only-capture/d79a3b89805611d5be3724144e1d24a403ef82b6/data/1439098258289/reports.json) of the data can be obtained on GitHub, or alternatively, can be [viewed in a tabular format](https://github.com/tollmanz/report-only-capture/tree/d79a3b89805611d5be3724144e1d24a403ef82b6/data/1439098258289) on GitHub. 
+When reports were triggered, they were sent to an endpoint defined that grabbed the headers, POST body content, and query args (which contained the browser information) and recorded the data as a JSON object in a document database.
 
 To collect the data, I used a combination of automated testing and manual page views. All of the tests were conducted using browsers through Browserstack's VMs. Ideally, I would collect CSP reports from every browser on every OS, but that was not practical given my resources. Instead, I focused on getting reports for as many browsers and browser version possible, without focusing on the OS that was used. I tested on different versions of OS X, Windows, Android and iOS. Most decisions in this regard were based on Browserstack features. I tended to prefer OS's that launched faster on Browserstack (OS X) and OS's that were more reliable in their testing environment (OS X and Windows). 
 
-Unfortunately, due to Selenium [limitations](https://code.google.com/p/selenium/issues/detail?id=7640) and an unreliable tests, I could only test a handful of browsers automatically. Most notably, Firefox running under Selenium does not issue CSP violation reports. 
+Unfortunately, due to Selenium [limitations](https://code.google.com/p/selenium/issues/detail?id=7640) and an unreliable tests, I could only test a handful of browsers automatically. Most notably, Firefox running under Selenium does not issue CSP violation reports. Additionally, I had problems with some browsers triggering fatal Selenium errors at the start of the test, which limited automated testing. Finally, Browserstack's "Live" testing features many more browsers than the "Automate" testing. I could not automate all tests due to lack of access to the browsers needed.
+
+Manual testing involved painstakingly firing up a new VM and navigating the the CSP report triggering page in the VM. To Browserstack's credit, these VM launch incredibly fast (10 - 30 seconds in my experience). Each run would take 1-2 minutes to complete, but since this was an entirely manual process, it was a lot of work to complete a test run. Each test run required a specific URL per browser. The URL contained query args that identified the browser. This identifying information was essential so that a report could be associated with a specific browser as relying on user agent is notoriously difficult to do.
+
+Reports were collected from the following browsers:
+
+* Chrome 14.0 - 44.0
+* Safari 5.1, 6.0, 6.1, 7.0, & 8.0 (OS X)
+* Safari 5.1, 6.0, 7.0, 8.0, 9.0 (iOS)
+* Opera 15.0 - 32.0
+* Firefox 5.0 - 41.0
+* Edge 0.11
+* Android 4.4, 5.0
+
+More browser versions and browsers were tested, but if they did not send a report, they were not included in the final sample because they produced no data. I did observe that some browsers (most notably IE 10 and 11) would adhere to the CSP directives, but not produce a report.
+
+Each browser was tested twice; once with the CSP report URI using the same IP and port as the origin and a second test with the CSP report URI using the same IP and a different port than the origin. These two report URIs were used in order to observe differences between sending reports to different endpoints.
+
+The test page used for generate the CSP reports set a cookie in the browser. I have previously observed differences in cookie handling [see footnote in "WordPress HTTPS Mixed Content Detector Plugin"](https://www.tollmanz.com/wordpress-https-mixed-content-detector/) and this is something I wanted to understand better.
+
+## Results
+
+In total 2,292 reports were observed. All reports were collected in a Couchbase database. A raw [JSON dump](https://raw.githubusercontent.com/tollmanz/report-only-capture/d79a3b89805611d5be3724144e1d24a403ef82b6/data/1439098258289/reports.json) of the data can be obtained on GitHub, or alternatively, can be [viewed in a tabular format](https://github.com/tollmanz/report-only-capture/tree/d79a3b89805611d5be3724144e1d24a403ef82b6/data/1439098258289) on GitHub. Note that when viewing this data, a field with `----` as its value means that the field was not set for the report. In other words, the browser did not send that field. If the value is empty (i.e., an empty string `''`), that means that the browser sent the field with the report, but the value was empty.
+
+All browsers properly sent CSP violation reports as POST requests with a JSON payload. This POST request with a JSON payload was the only fully cross browser similarity that I observed. Most browsers, save for some older browsers, contained the `csp-report` property with individual report data as dictated by [CSP2 4.4](http://www.w3.org/TR/CSP2/#violation-reports); however, I cannot say that this was truly consistent across browsers.
+
+Content Security Report violations varied widely across the spectrum of browsers tested. In total, 14 different properties were observed in the `csp-report` object:
+
+* blocked-uri
+* document-uri
+* effective-directive
+* original-policy
+* referrer
+* status-code
+* violated-directive
+* source-file
+* line-number
+* column-number
+* request
+* request-headers
+* script-sample
+
+Additionally, two properties were observed outside of the `csp-report` property:
+
+* document-url
+* violated-directive
+
+`document-url` was observed to fill the same purpose of `document-uri`, but only ever appeared outside of the `csp-property` object and special care needs to be taken when handling this property.
+
+The last four items in the list of properties are not specified by the CSP2 spec. Only one of the those four were observed in a modern browser, `script-sample`. Interestingly, I did not observe this as part of my core tests. Rather, I accidentally found discovered CSP report was triggered when using Firefox's Developer Tools to inspect elements in the DOM. This apparently triggered a script to execute and a CSP report to be sent.
+
+The other three non-standard properties were observed in the following browsers:
+
+* `request`, contained the full HTTP request string (e.g., `GET http://45.55.25.245:8123/csp?os=OS%20X&device=&browser_version=5.0&browser=firefox&os_version=Yosemite HTTP/1.1`); Firefox 5.0 - 13.0 
+* `request-headers`: contains headers sent with request separated by new lines; Firefox 5.0 
+* `document-url`: synonymous with `document-uri`; Safari 5.1, 6.1 (OS X), Safari 5.1, 6.0 (iOS);
+
+## DONT FORGET TO REDO THE DATA TO VERIFY THE DOCUMENT URL STUFF!!!!!
+
+The individual CSP report properties also varied depending on the browser. 
+
+**`blocked-uri`**
+
+The `blocked-uri` directive varied primarily in the amount of information provided. The CSP2 spec [dictates](http://www.w3.org/TR/CSP2/#strip-uri-for-reporting) that this value needs to be "stripped" for reporting. It can have one of three variations:
+
+1. `data` or `blob` or `filesystem`
+2. `http://www.example.com/`
+3. `http://www.example.com/resource`
+
+If a `data`, `blob` or `filesystem` URI is the source of the violation, the spec indicates that only the word `data`, `blob` or `filesystem`. In no case should the resource actually be reported.
+
+Every single version of Firefox tested (5.0 - 41.0) reported this incorrectly with regard to `data`. It reported the full data-URI encoded resource. It's worth noting that this can be particularly problematic for a CSP report collecting app as this can potentially send a significant amount of data (e.g., data-URI encoded fonts are not uncommon). All other browsers handled `data` properly. 
+
+The spec further states that if the violating URI is from the same origin as the `document-uri`, the URI fragment can remain. If not, only the URI origin should be reported. Only Firefox did this incorrectly. For Firefox 5.0 - 41.0, it always reported the full URI, including the fragment, for every `blocked-uri` value. All other browsers that reported a `blocked-uri` (some older browsers didn't) correctly reported the URI with and without the fragment in the correct cases.
+
+ 
+
 
 
 
