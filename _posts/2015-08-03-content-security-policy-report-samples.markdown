@@ -106,9 +106,9 @@ The last four items in the list of properties are not specified by the CSP2 spec
 
 The other three non-standard properties were observed in the following browsers:
 
-* `request`, contained the full HTTP request string (e.g., `GET http://45.55.25.245:8123/csp?os=OS%20X&device=&browser_version=5.0&browser=firefox&os_version=Yosemite HTTP/1.1`); Firefox 5.0 - 13.0 
-* `request-headers`: contains headers sent with request separated by new lines; Firefox 5.0 
-* `document-url`: synonymous with `document-uri`; Safari 5.1, 6.1 (OS X), Safari 5.1, 6.0 (iOS);
+* `request`, contained the full HTTP request string (e.g., `GET {url} HTTP/1.1`); Firefox 5.0 - 13.0
+* `request-headers`: contains headers sent with request separated by new lines; Firefox 5.0
+* `document-url`: synonymous with `document-uri`; Safari 5.1, 6.1 (OS X), Safari 5.1, 6.0 (iOS)
 
 The individual CSP report properties also varied depending on the browser. I will discuss properties that were implemented inconsistently across browsers. Any property not mentioned is assumed to be consistent across browsers.
 
