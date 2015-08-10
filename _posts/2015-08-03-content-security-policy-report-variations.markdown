@@ -57,7 +57,7 @@ Unfortunately, due to Selenium [limitations](https://code.google.com/p/selenium/
 
 Manual testing involved painstakingly firing up a new VM and navigating to the CSP report test page in the VM. To Browserstack's credit, these VMs launch incredibly fast (10 - 30 seconds in my experience). Each run would take 1-2 minutes to complete, but since this was an entirely manual process, it was a lot of work to complete a test run. Each test run required a specific URL per browser. The URL contained query args that identified the browser. This identifying information was essential so that a report could be associated with a specific browser as relying on user agent strings is notoriously difficult to parse accurately.
 
-Reports were collected from the 92 different browsers, including:
+Reports were collected from 92 different browsers, including:
 
 * Chrome 14.0 - 44.0
 * Safari 5.1, 6.0, 6.1, 7.0, & 8.0 (OS X)
@@ -71,7 +71,7 @@ More browser versions and browsers were tested, but if they did not send a repor
 
 Each browser was tested twice; once with the CSP report URI using the same IP and port as the origin and a second test with the CSP report URI using the same IP and a different port than the origin. These two report URIs were used in order to observe differences between sending reports to different endpoints. This strategy was not too helpful and would have benefited from sending reports to different URLs altogether.
 
-The test page used for generate the CSP reports set a cookie in the browser. I have previously observed differences in cookie handling [see footnote in "WordPress HTTPS Mixed Content Detector Plugin"](https://www.tollmanz.com/wordpress-https-mixed-content-detector/) and this is something I wanted to understand better. As such, I set a cookie to see if that data would be passed to the collector.
+The test page used for generate the CSP reports set a cookie in the browser. I have previously observed differences in cookie handling ([see footnote in "WordPress HTTPS Mixed Content Detector Plugin"](https://www.tollmanz.com/wordpress-https-mixed-content-detector/)) and this is something I wanted to understand better. As such, I set a cookie to see if that data would be passed to the collector.
 
 ## Results
 
