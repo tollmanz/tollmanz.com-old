@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "What to Expect When You Are Expecting Content Security Policy Reports"
+title:      "What to Expect When Expecting Content Security Policy Reports"
 date:       2015-08-09 17:30:00
 categories: content security policy, monitoring, security
 ---
